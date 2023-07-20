@@ -213,7 +213,7 @@ for i in {0,...,l-1} do
 	x_i <- x_i + gQ(y_i)
 end for
 ```
-```
+
 #### Constraints
 For security reasons there are a few constraints that must be met.
 
