@@ -253,6 +253,7 @@ end for
 ```
 
 #### Constraints
+
 For security reasons there are a few constraints that must be met.
 
 **AnemoiSponge**: The Anemoi instance must operate on the field $F^{r+c}_q$ where r is the rate and c is the capacity. Due to the inner workings of Anemoi r_c must be even.
