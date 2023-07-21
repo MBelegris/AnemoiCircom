@@ -68,7 +68,7 @@ template getNumRounds(nInputs){
     }
 }
 
-template getRoundConstants(nCol){
+template getRoundConstants(nCol) {
     signal input alpha;
     signal input g;
     signal input inv_g;
@@ -76,14 +76,20 @@ template getRoundConstants(nCol){
     var pi_0 = 1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679;
     var pi_1 = 8214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196;
 
+    signal tmp[nCol];
     signal output c[nCol];
     signal output d[nCol];
 
-    for (var i = 0; i < nCol; i++){
-        c[i] <== g*(pi_0**2) + (pi_0 + pi_1)**alpha;
-        d[i] <== g*(pi_1**2) + (pi_0 + pi_1)**alpha + inv_g;
+    for (var i = 0; i < nCol; i++) {
+        var const1 = (pi_0 + pi_1)**alpha;
+
+        tmp[i] <== const1; // Introduce a temporary variable to store const1
+
+        c[i] <== g*(pi_0**2) + tmp[i]; // Quadratic constraint
+        d[i] <== g*(pi_1**2) + tmp[i] + inv_g; // Quadratic constraint
     }
 }
+
 
 template constantAddition(nInputs){
     signal input c[nInputs];
@@ -95,13 +101,13 @@ template constantAddition(nInputs){
     signal output outX[nInputs];
     signal output outY[nInputs];
     
-    for (var i=0; i < nCol; i++){
+    for (var i=0; i < nInputs; i++){
         outX[i] <== X[i] + c[i];
         outY[i] <== Y[i] + d[i];    
     }
 }
 
-template Anemoi(nInputs){
+template Anemoi(nInputs, numRounds){
     // State of Anemoi is a 2 row matrix:
     // X[x_0,...,x_l-1]
     // Y[y_0,...,y_l-1]
@@ -113,31 +119,37 @@ template Anemoi(nInputs){
     signal input exp; // The main exponent to be used in Qδ and Qγ
     signal input g; // g is the generator found in Fq
     signal input inv_g; // The multiplicative inverse of g in Fq
-    signal input numRounds; // Number of rounds to run round function
+    // signal input ; // Number of rounds to run round function
 
     var security_level = 128;
     var a = 3; // The main exponent found in the flystel
 
     component getRoundConstants = getRoundConstants(nInputs);
-    getRoundConstants.alpha = a;
-    getRoundConstants.g = g;
-    getRoundConstants.inv_g = inv_g;
-    getRoundConstants.q = q;
+    getRoundConstants.alpha <== a;
+    getRoundConstants.g <== g;
+    getRoundConstants.inv_g <== inv_g;
+    getRoundConstants.q <== q;
 
-    signal c <== getRoundConstants.c;
-    signal d <== getRoundConstants.d;
+    signal c <== getRoundConstants.c; // Constants C
+    signal d <== getRoundConstants.d; // Constants D
 
-    var roundX = X;
-    var roundY = Y;
-    for (i = 0; i < numRounds; i++){
+    signal roundX[numRounds + 1][nInputs];
+    signal roundY[numRounds + 1][nInputs];
+
+    roundX[0] = X;
+    roundY[0] = Y;
+
+    component constantAddition[numRounds];
+
+    for (var i = 0; i < numRounds; i++){
         // Constant Addition A
-        component constantAddition = constantAddition(nInputs);
-        constantAddition.c = c;
-        constantAddition.d = d;
-        constantAddition.X = roundX;
-        constantAddition.Y = roundY;
-        roundX <== constantAddition.outX;
-        roundY <== constantAddition.outY;
+        constantAddition[i] = constantAddition(nInputs);
+        constantAddition[i].c <== c;
+        constantAddition[i].d <== d;
+        constantAddition[i].X <== roundX[i]; 
+        constantAddition[i].Y <== roundY[i]; 
+        roundX[i+1] <== constantAddition[i].outX;
+        roundY[i+1] <== constantAddition[i].outY;
 
         // TODO: Linear Layer M
 
@@ -148,14 +160,14 @@ template Anemoi(nInputs){
     }
 }
 
-component main = Anemoi(1);
-INPUT = {
-    "X": "", 
-    "Y": "",
-    "q": "",
-    "isPrime": "", 
-    "exp": "", 
-    "g": "", 
-    "inv_g": "", 
-    "numRounds": ""
-}
+component main = Anemoi(2, 2);
+// INPUT = {
+//     "X": "", 
+//     "Y": "",
+//     "q": "",
+//     "isPrime": "", 
+//     "exp": "", 
+//     "g": "", 
+//     "inv_g": "", 
+//     "numRounds": ""
+// }
