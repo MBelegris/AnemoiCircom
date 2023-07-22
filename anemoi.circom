@@ -96,7 +96,7 @@ template diffusionLayer(nInputs){
     }
 }
 
-template PHT (nInputs){
+template PHT(nInputs){
     // PHT P does the following
     // Y <- Y + X
     // X <- X + Y
@@ -112,6 +112,65 @@ template PHT (nInputs){
     }
 }
 
+template openFlystel(nInputs){
+    // Open Flystel network maps (x,y) to (u,v)
+    // 1. x <- x - Qγ(y)
+    // 2. y <- y - E^-1(x)
+    // 3. x <- x + Qγ(y)
+    // 4. y <- x, v <- y
+
+    // Qγ = β(x^a) + γ
+    // Qδ = β(x^a) + δ
+    // E^-1 = x^1/a
+
+    signal input x;
+    signal input y;
+    signal input alpha;
+    signal input beta;
+    signal input gamma;
+    signal input delta;
+
+    signal output u;
+    signal output v;
+
+    var outX;
+    var outY;
+
+    outX = x - (beta*(x**alpha) + gamma);
+    outY = y - (x**alpha);
+    u <== outX + (beta*(outY**alpha) + delta);
+    v <== outY
+}
+
+template sBox(nInputs){
+    // Let H be an open Flystel operating on Fq. Then Sbox S:
+    // S(X, Y) = H(x0,y1),...,H(xl-1,yl-1)
+    signal input X[nInputs];
+    signal input Y[nInputs];
+    signal input alpha;
+    signal input beta;
+    signal input gamma;
+    signal input delta;
+
+
+    signal output outX[nInputs];
+    signal output outY[nInputs];
+
+    component flystel = openFlystel(nInputs);
+
+    for (var i = 0; i < nInputs; i++){
+        flystel[i].x <== X[i];
+        flystel[i].y <== Y[i];
+        flystel[i].alpha <== alpha;
+        flystel[i].beta <== beta;
+        flystel[i].gamma <== gamma;
+        flystel[i].delta <== delta;
+
+        outX[i] <== flystel.u;
+        outY[i] <== flystel.v;
+    }
+}
+
 template Anemoi(nInputs, numRounds){
     // State of Anemoi is a 2 row matrix:
     // X[x_0,...,x_l-1]
@@ -121,7 +180,8 @@ template Anemoi(nInputs, numRounds){
     signal input Y[nInputs];
     signal input q; // The field over which the hash function is described (either an odd prime field or 2^n where n is odd)
     signal input isPrime;
-    signal input exp; // The main exponent to be used in Qδ and Qγ
+    signal input exp; // The main exponent to be used in Qδ and Qγ (closed Flystel)
+    signal input inv_exp; // The inverse of the exponent to be used in Qδ and Qγ (open Flystel)
     signal input g; // g is the generator found in Fq
     signal input inv_g; // The multiplicative inverse of g in Fq
     signal input roundConstantC;
@@ -148,6 +208,7 @@ template Anemoi(nInputs, numRounds){
     component constantAddition[numRounds];
     component diffusionLayer[numRounds];
     component phtLayer[numRounds];
+    component sBox[numRounds];
 
     for (var i = 0; i < numRounds; i++){
         // Constant Addition A
@@ -174,7 +235,18 @@ template Anemoi(nInputs, numRounds){
         roundX[(4*i) + 3] <== phtLayer[i].outX;
         roundY[(4*i) + 3] <== phtLayer[i].outY;
 
-        // TODO: S-box Layer H
-
+        // S-box Layer H
+        // Implementing Qγ(x) = gx^a + g^-1
+        // Implementing Qδ(x) = gx^a
+        // Implementing E^-1 = x^1/a
+        sBox[i] = sBox(nInputs);
+        sBox[i].X <== roundX[(4*i) + 3];
+        sBox[i].Y <== roundY[(4*i) + 3];
+        sBox[i].alpha <== inv_exp; // Value is equivalent to 1/a so E^inv_exp = E^1/a
+        sBox[i].beta <== g;
+        sBox[i].gamma <== inv_g;
+        sBox[i].delta <== 0;
+        roundX[(4*i) + 4] <== sBox.outX;
+        roundY[(4*i) + 4] <== sBox.outY;
     }
 }
