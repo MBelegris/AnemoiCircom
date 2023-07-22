@@ -102,9 +102,10 @@ def find_generator(prime_value):
 
 def generate_input_json(prime_value, alpha, nInputs):
     print("Enter generate input json")
+
     if not is_prime(prime_value):
         raise ValueError("The input prime_value is not a prime number.")
-
+        
     generator = find_generator(prime_value)
     print("Found generator:", generator)
     if generator is None:
