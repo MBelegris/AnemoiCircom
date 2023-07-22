@@ -31,14 +31,10 @@ template wordPermutation(nInputs){
 
     signal output out[nInputs];
 
-    for (var i = 0; i < nInputs; i++){
-        if ((i+1) > nInputs){
-            out[i] = vector[0]
-        }
-        else{
-            out[i] <== vector[i+1]
-        }
+    for (var i = 1; i < nInputs; i++){
+        out[i-1] <== vector[i];
     }
+    out[nInputs-1] <== vector[0];
 }
 
 template diffusionLayer(nInputs){
@@ -118,41 +114,41 @@ template Anemoi(nInputs, numRounds){
     var security_level = 128;
     var a = 3; // The main exponent found in the flystel
 
-    signal roundX[numRounds + 1][nInputs];
-    signal roundY[numRounds + 1][nInputs];
+    signal roundX[(4*numRounds) + 1][nInputs];
+    signal roundY[(4*numRounds) + 1][nInputs];
     
     // Stores round constants for each round
-    signal c[5*numRounds]; 
-    signal d[5*numRounds];
+    signal c[numRounds]; 
+    signal d[numRounds];
 
     for (var i = 0; i < numRounds; i++){
         c[i] <== roundConstantC;
         d[i] <== roundConstantD;
     }
 
-    roundX[0] = X;
-    roundY[0] = Y;
+    roundX[0] <== X;
+    roundY[0] <== Y;
 
     component constantAddition[numRounds];
     component diffusionLayer[numRounds];
 
-    for (var i = 0; i < 5*numRounds; i=i*5){
+    for (var i = 0; i < numRounds; i++){
         // Constant Addition A
         constantAddition[i] = constantAddition(nInputs);
         constantAddition[i].c <== c;
         constantAddition[i].d <== d;
-        constantAddition[i].X <== roundX[i]; 
-        constantAddition[i].Y <== roundY[i]; 
-        roundX[i+1] <== constantAddition[i].outX;
-        roundY[i+1] <== constantAddition[i].outY;
+        constantAddition[i].X <== roundX[4*i]; 
+        constantAddition[i].Y <== roundY[4*i]; 
+        roundX[(4*i)+1] <== constantAddition[i].outX;
+        roundY[(4*i)+1] <== constantAddition[i].outY;
 
         // Linear Layer M
         diffusionLayer[i] = diffusionLayer(nInputs);
-        diffusionLayer[i].X <== roundX[i+1];
-        diffusionLayer[i].X <== roundX[i+1];
+        diffusionLayer[i].X <== roundX[(4*i)+1];
+        diffusionLayer[i].Y <== roundX[(4*i)+1];
         diffusionLayer[i].g <== g;
-        roundX[i+2] <== diffusionLayer.outX;
-        roundY[i+2] <== diffusionLayer.outY;
+        roundX[(4*i)+2] <== diffusionLayer[i].outX;
+        roundY[(4*i)+2] <== diffusionLayer[i].outY;
 
         // TODO: PHT P
 
