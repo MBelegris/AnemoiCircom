@@ -133,13 +133,11 @@ template openFlystel(nInputs){
     signal output u;
     signal output v;
 
-    var outX;
-    var outY;
+    signal t; // as taken from the paper
 
-    outX = x - (beta*(x**alpha) + gamma);
-    outY = y - (x**alpha);
+    t = x - (beta*(x**alpha) + gamma);
+    v <== y - (x**alpha);
     u <== outX + (beta*(outY**alpha) + delta);
-    v <== outY
 }
 
 template sBox(nInputs){
@@ -188,7 +186,6 @@ template Anemoi(nInputs, numRounds){
     signal input roundConstantD;
 
     var security_level = 128;
-    var a = 3; // The main exponent found in the flystel
 
     signal roundX[(4*numRounds) + 1][nInputs];
     signal roundY[(4*numRounds) + 1][nInputs];

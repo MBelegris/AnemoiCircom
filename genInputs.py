@@ -86,6 +86,21 @@ def mod_inverse(a, m):
         x0, x1 = x1 - q * x0, x0
     return x1 if x1 >= 0 else x1 + m0
 
+def extended_gcd(a, b):
+    if a == 0:
+        return b, 0, 1
+    else:
+        gcd, x, y = extended_gcd(b % a, a)
+        return gcd, y - (b // a) * x, x
+
+def mult_mod_inverse(a, modulus):
+    print("Finding multiplicative modular  of a value using gcd")
+    gcd, x, y = extended_gcd(a, modulus)
+    if gcd != 1:
+        raise ValueError("The modular inverse does not exist.")
+    return x % modulus
+
+
 def find_generator(prime_value):
     print("Finding generator")
     for g in range(2, prime_value):
@@ -117,6 +132,9 @@ def generate_input_json(prime_value, alpha, nInputs):
     numRounds = getNumRounds(nInputs, alpha)
     print("Number of rounds:",numRounds)
 
+    inv_exp = mult_mod_inverse(alpha, prime_value)
+    print("Found inverse of exponent:", inv_exp)
+
     roundContstants = genRoundConstants(alpha=alpha, g=generator, inv_g=inverse_generator, q=prime_value)
     print("Round constants generated:", roundContstants[0], roundContstants[1])
 
@@ -126,12 +144,12 @@ def generate_input_json(prime_value, alpha, nInputs):
     input_data = {
         "g": generator,
         "inv_g": inverse_generator,
-        "q": prime_value, #Prime field q
-        "isPrime": True,
-        "a": alpha, # a={3,5,7,11}
+        "q": prime_value, # Prime field q
+        "isPrime": True, # For now field is constant and a prime
         "X": state[0],
         "Y": state[1],
-        "exp": 2, # value taken from paper
+        "exp": alpha, # # a={3,5,7,11} value taken from paper
+        "inv_exp": inv_exp, # exp * inv_exp = 1 mod q
         "roundConstantC": roundContstants[0],       
         "roundConstantD": roundContstants[1],       
     }
@@ -143,7 +161,7 @@ if __name__ == "__main__":
     print("Generating Inputs")
     prime_value = 2**64 - 2**32 + 1
     # a={3,5,7,11} and nInputs={1,2,3,4,6,8}
-    alpha = 3
+    alpha = 11 # taken from the paper
     nInputs = 1
     generate_input_json(prime_value=prime_value, alpha=alpha, nInputs=nInputs)
     print("Generator and its inverse written to input.json.")

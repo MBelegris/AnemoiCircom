@@ -172,15 +172,15 @@ The state is added by a set of round constants that depend on the position (inde
 
 We let:
 
-1. $x_j <- x_j + c[i][j]$.
-2. $y_j <- y_j + d[i][j]$.
+1. $x_j <- x_j + c[i] [j]$.
+2. $y_j <- y_j + d[i] [j]$.
 
 They are derived as follows:
 
 1. π_0 and π_1 are the first and second blocks of 100 digits (not inlcuding 3, the first value) of π(3.14...)
 2. The round constants are derived by applying the open Flystel with the same parameters as in the round function on the pair (π^i_0,π^j_1)
- a. $c[i][j] = g(π^i_0)^2 + (π^i_0 + π^j_1)^a$
- b. $d[i][j] = g(π^j_1)^2 + (π^i_0 + π^j_1)^a + g^-1$
+ a. $c[i] [j] = g(π^i_0)^2 + (π^i_0 + π^j_1)^a$
+ b. $d[i] [j] = g(π^j_1)^2 + (π^i_0 + π^j_1)^a + g^-1$
 
 #### Diffusion Layer
 
