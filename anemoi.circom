@@ -96,6 +96,22 @@ template diffusionLayer(nInputs){
     }
 }
 
+template PHT (nInputs){
+    // PHT P does the following
+    // Y <- Y + X
+    // X <- X + Y
+    signal input X[nInputs];
+    signal input Y[nInputs];
+
+    signal output outX[nInputs];
+    signal output outY[nInputs];
+
+    for (var i = 0; i < nInputs; i++){
+        outY[i] <== Y[i] + X[i];
+        outX[i] <== X[i] + outY[i];
+    }
+}
+
 template Anemoi(nInputs, numRounds){
     // State of Anemoi is a 2 row matrix:
     // X[x_0,...,x_l-1]
@@ -131,6 +147,7 @@ template Anemoi(nInputs, numRounds){
 
     component constantAddition[numRounds];
     component diffusionLayer[numRounds];
+    component phtLayer[numRounds];
 
     for (var i = 0; i < numRounds; i++){
         // Constant Addition A
@@ -150,7 +167,12 @@ template Anemoi(nInputs, numRounds){
         roundX[(4*i)+2] <== diffusionLayer[i].outX;
         roundY[(4*i)+2] <== diffusionLayer[i].outY;
 
-        // TODO: PHT P
+        // PHT P
+        phtLayer[i] = PHT(nInputs);
+        phtLayer[i].X <== roundX[(4*i) + 2];
+        phtLayer[i].Y <== roundY[(4*i) + 2];
+        roundX[(4*i) + 3] <== phtLayer[i].outX;
+        roundY[(4*i) + 3] <== phtLayer[i].outY;
 
         // TODO: S-box Layer H
 
