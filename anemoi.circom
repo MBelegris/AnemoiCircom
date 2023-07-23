@@ -197,9 +197,9 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     signal input Y[nInputs];
     signal input q; // The field over which the hash function is described (either an odd prime field or 2^n where n is odd)
     signal input isPrime;
-    signal input exp; // The main exponent to be used in Qδ and Qγ (closed Flystel)
+    // signal input exp; // The main exponent to be used in Qδ and Qγ (closed Flystel)
     // signal input inv_exp; // The inverse of the exponent to be used in Qδ and Qγ (open Flystel)
-    // signal input g; // g is the generator found in Fq
+    signal input g; // g is the generator found in Fq
     signal input inv_g; // The multiplicative inverse of g in Fq
     signal input roundConstantC;
     signal input roundConstantD;
@@ -210,10 +210,10 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     signal roundY[(4*numRounds) + 1][nInputs];
     
     // Stores round constants for each round
-    signal c[numRounds]; 
-    signal d[numRounds];
+    signal c[nInputs]; 
+    signal d[nInputs];
 
-    for (var i = 0; i < numRounds; i++){
+    for (var i = 0; i < nInputs; i++){
         c[i] <== roundConstantC;
         d[i] <== roundConstantD;
     }
