@@ -205,8 +205,6 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     signal output outX[nInputs];
     signal output outY[nInputs];
 
-    var security_level = 128;
-
     signal roundX[(4*numRounds) + 1][nInputs];
     signal roundY[(4*numRounds) + 1][nInputs];
     

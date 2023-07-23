@@ -36,5 +36,5 @@ template jive_mode(b, numRounds, exp, inv_exp){
     }
     out <== acc[b-1];
 }
-
+// Change these values when using different inputs
 component main = jive_mode(1,19, 8384883667915720146, 11);
