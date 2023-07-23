@@ -3,7 +3,7 @@ pragma circom 2.0.0;
 // Anemoi Hash Function
 // Steps:
 // For each round:
-// 1. Constant Addtion
+// 1. Constant Addition
 // 2. Linear Layer
 // 3. PHT
 // 4. S-box layer H (flystel network)
@@ -197,12 +197,13 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     signal input Y[nInputs];
     signal input q; // The field over which the hash function is described (either an odd prime field or 2^n where n is odd)
     signal input isPrime;
-    // signal input exp; // The main exponent to be used in Qδ and Qγ (closed Flystel)
-    // signal input inv_exp; // The inverse of the exponent to be used in Qδ and Qγ (open Flystel)
     signal input g; // g is the generator found in Fq
     signal input inv_g; // The multiplicative inverse of g in Fq
     signal input roundConstantC;
     signal input roundConstantD;
+
+    signal output outX[nInputs];
+    signal output outY[nInputs];
 
     var security_level = 128;
 
@@ -222,7 +223,7 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     roundY[0] <== Y;
 
     component constantAddition[numRounds];
-    component diffusionLayer[numRounds];
+    component diffusionLayer[numRounds + 1];
     component phtLayer[numRounds];
     component sBox[numRounds];
 
@@ -258,11 +259,20 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
         sBox[i] = sBox(nInputs, inv_exp);
         sBox[i].X <== roundX[(4*i) + 3];
         sBox[i].Y <== roundY[(4*i) + 3];
-        // sBox[i].alpha <== inv_exp; // Value is equivalent to 1/a so E^inv_exp = E^1/a
         sBox[i].beta <== g;
         sBox[i].gamma <== inv_g;
         sBox[i].delta <== 0;
         roundX[(4*i) + 4] <== sBox[i].outX;
         roundY[(4*i) + 4] <== sBox[i].outY;
     }
+    // One final diffusion before returning the Anemoi permutation
+    diffusionLayer[numRounds] = diffusionLayer(nInputs);
+    diffusionLayer[numRounds].X <== roundX[4*numRounds];
+    diffusionLayer[numRounds].Y <== roundY[4*numRounds];
+    diffusionLayer[numRounds].g <== g;
+
+    outX <== diffusionLayer[numRounds].outX;
+    outY <== diffusionLayer[numRounds].outY;
 }
+
+//component main = Anemoi(1,19, 8384883667915720146, 11);
