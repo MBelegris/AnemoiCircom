@@ -112,7 +112,21 @@ template PHT(nInputs){
     }
 }
 
-template openFlystel(nInputs){
+template exponentiate(exponent){
+    signal input in;
+    signal output out;
+
+    signal stor[exponent];
+
+    stor[0] <== in;
+
+    for (var i = 1; i < exponent; i++){
+        stor[i] <== stor[i-1] * in;
+    }
+    out <== stor[exponent-1];
+}
+
+template openFlystel(nInputs, alpha){
     // Open Flystel network maps (x,y) to (u,v)
     // 1. x <- x - Qγ(y)
     // 2. y <- y - E^-1(x)
@@ -125,7 +139,6 @@ template openFlystel(nInputs){
 
     signal input x;
     signal input y;
-    signal input alpha;
     signal input beta;
     signal input gamma;
     signal input delta;
@@ -135,41 +148,47 @@ template openFlystel(nInputs){
 
     signal t; // as taken from the paper
 
-    t = x - (beta*(x**alpha) + gamma);
-    v <== y - (x**alpha);
-    u <== outX + (beta*(outY**alpha) + delta);
+    component const1 = exponentiate(alpha);
+    const1.in <== x;
+
+    component const2 = exponentiate(alpha);
+    component const3 = exponentiate(alpha);
+
+    t <== x - (beta*const1.out + gamma);
+    const2.in <== t;
+    v <== y - const2.out;
+    const3.in <== v;
+    u <== t + (beta*const3.out + delta);
 }
 
-template sBox(nInputs){
+template sBox(nInputs, alpha){
     // Let H be an open Flystel operating on Fq. Then Sbox S:
     // S(X, Y) = H(x0,y1),...,H(xl-1,yl-1)
     signal input X[nInputs];
     signal input Y[nInputs];
-    signal input alpha;
     signal input beta;
     signal input gamma;
     signal input delta;
 
-
     signal output outX[nInputs];
     signal output outY[nInputs];
 
-    component flystel = openFlystel(nInputs);
+    component flystel[nInputs];
 
     for (var i = 0; i < nInputs; i++){
+        flystel[i] = openFlystel(nInputs, alpha);
         flystel[i].x <== X[i];
         flystel[i].y <== Y[i];
-        flystel[i].alpha <== alpha;
         flystel[i].beta <== beta;
         flystel[i].gamma <== gamma;
         flystel[i].delta <== delta;
 
-        outX[i] <== flystel.u;
-        outY[i] <== flystel.v;
+        outX[i] <== flystel[i].u;
+        outY[i] <== flystel[i].v;
     }
 }
 
-template Anemoi(nInputs, numRounds){
+template Anemoi(nInputs, numRounds, exp, inv_exp){
     // State of Anemoi is a 2 row matrix:
     // X[x_0,...,x_l-1]
     // Y[y_0,...,y_l-1]
@@ -179,8 +198,8 @@ template Anemoi(nInputs, numRounds){
     signal input q; // The field over which the hash function is described (either an odd prime field or 2^n where n is odd)
     signal input isPrime;
     signal input exp; // The main exponent to be used in Qδ and Qγ (closed Flystel)
-    signal input inv_exp; // The inverse of the exponent to be used in Qδ and Qγ (open Flystel)
-    signal input g; // g is the generator found in Fq
+    // signal input inv_exp; // The inverse of the exponent to be used in Qδ and Qγ (open Flystel)
+    // signal input g; // g is the generator found in Fq
     signal input inv_g; // The multiplicative inverse of g in Fq
     signal input roundConstantC;
     signal input roundConstantD;
@@ -236,14 +255,14 @@ template Anemoi(nInputs, numRounds){
         // Implementing Qγ(x) = gx^a + g^-1
         // Implementing Qδ(x) = gx^a
         // Implementing E^-1 = x^1/a
-        sBox[i] = sBox(nInputs);
+        sBox[i] = sBox(nInputs, inv_exp);
         sBox[i].X <== roundX[(4*i) + 3];
         sBox[i].Y <== roundY[(4*i) + 3];
-        sBox[i].alpha <== inv_exp; // Value is equivalent to 1/a so E^inv_exp = E^1/a
+        // sBox[i].alpha <== inv_exp; // Value is equivalent to 1/a so E^inv_exp = E^1/a
         sBox[i].beta <== g;
         sBox[i].gamma <== inv_g;
         sBox[i].delta <== 0;
-        roundX[(4*i) + 4] <== sBox.outX;
-        roundY[(4*i) + 4] <== sBox.outY;
+        roundX[(4*i) + 4] <== sBox[i].outX;
+        roundY[(4*i) + 4] <== sBox[i].outY;
     }
 }

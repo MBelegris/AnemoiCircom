@@ -133,7 +133,7 @@ def generate_input_json(prime_value, alpha, nInputs):
     print("Number of rounds:",numRounds)
 
     inv_exp = mult_mod_inverse(alpha, prime_value)
-    print("Found inverse of exponent:", inv_exp)
+    print("Found inverse of exponent", alpha, ":", inv_exp)
 
     roundContstants = genRoundConstants(alpha=alpha, g=generator, inv_g=inverse_generator, q=prime_value)
     print("Round constants generated:", roundContstants[0], roundContstants[1])
@@ -148,8 +148,6 @@ def generate_input_json(prime_value, alpha, nInputs):
         "isPrime": True, # For now field is constant and a prime
         "X": state[0],
         "Y": state[1],
-        "exp": alpha, # # a={3,5,7,11} value taken from paper
-        "inv_exp": inv_exp, # exp * inv_exp = 1 mod q
         "roundConstantC": roundContstants[0],       
         "roundConstantD": roundContstants[1],       
     }
