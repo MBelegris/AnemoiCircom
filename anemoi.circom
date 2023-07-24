@@ -122,12 +122,13 @@ template exponentiate(exponent){
 
     for (var i = 1; i < exponent; i++){
         stor[i] <== stor[i-1] * in;
+        log("Exponentiate: ", stor[i]);
     }
     out <== stor[exponent-1];
 }
 
 template openFlystel(nInputs, alpha){
-    // Open Flystel network maps (x,y) to (u,v)
+    // Open Flystel network H maps (x,y) to (u,v)
     // 1. x <- x - Qγ(y)
     // 2. y <- y - E^-1(x)
     // 3. x <- x + Qγ(y)
@@ -161,6 +162,38 @@ template openFlystel(nInputs, alpha){
     u <== t + (beta*const3.out + delta);
 }
 
+template closedFlystel(nInputs, alpha){
+    // Closed Flystel verifies that (x,u) = V(y,v)
+    // Equivalent to checking if (u,v) = H(x,y)
+    // x = Qγ(y) + E(y-v)
+    // v = Qδ(v) + E(y-v)
+
+    signal input y;
+    signal input v;
+
+    signal input beta;
+    signal input gamma;
+    signal input delta;
+
+    signal output x;
+    signal output u;
+
+    signal sub;
+    sub <== y - v;
+
+    component const1 = exponentiate(alpha);
+    const1.in <== y;
+
+    component const2 = exponentiate(alpha);
+    const2.in <== sub;
+
+    component const3 = exponentiate(alpha);
+    const3.in <== v;
+
+    x <== (beta*const1.out) + gamma + const2.out;
+    u <== (beta*const3.out) + delta + const2.out;
+}
+
 template sBox(nInputs, alpha){
     // Let H be an open Flystel operating on Fq. Then Sbox S:
     // S(X, Y) = H(x0,y1),...,H(xl-1,yl-1)
@@ -175,16 +208,44 @@ template sBox(nInputs, alpha){
 
     component flystel[nInputs];
 
-    for (var i = 0; i < nInputs; i++){
+    for (var i = 0; i < nInputs; i++){       
         flystel[i] = openFlystel(nInputs, alpha);
         flystel[i].x <== X[i];
         flystel[i].y <== Y[i];
         flystel[i].beta <== beta;
         flystel[i].gamma <== gamma;
         flystel[i].delta <== delta;
-
+            
         outX[i] <== flystel[i].u;
         outY[i] <== flystel[i].v;
+    }
+}
+
+template sBoxVerify(nInputs, alpha){
+    // TODO: add verification algorithm to 
+    // Let H be an closed Flystel operating on Fq. Then Sbox S:
+    // S(X, Y) = H(x0,y1),...,H(xl-1,yl-1)
+    signal input Y[nInputs];
+    signal input V[nInputs];
+    signal input beta;
+    signal input gamma;
+    signal input delta;
+
+    signal output outX[nInputs];
+    signal output outU[nInputs];
+
+    component flystel[nInputs];
+
+    for (var i = 0; i < nInputs; i++){       
+        flystel[i] = closedFlystel(nInputs, alpha);
+        flystel[i].y <== Y[i];
+        flystel[i].v <== V[i];
+        flystel[i].beta <== beta;
+        flystel[i].gamma <== gamma;
+        flystel[i].delta <== delta;
+            
+        outX[i] <== flystel[i].x;
+        outU[i] <== flystel[i].u;
     }
 }
 
@@ -207,6 +268,9 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
 
     signal roundX[(4*numRounds) + 1][nInputs];
     signal roundY[(4*numRounds) + 1][nInputs];
+
+    signal verifyX[numRounds][nInputs];
+    signal verifyU[numRounds][nInputs];
     
     // Stores round constants for each round
     signal c[nInputs]; 
@@ -224,6 +288,8 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     component diffusionLayer[numRounds + 1];
     component phtLayer[numRounds];
     component sBox[numRounds];
+
+    component verify[numRounds];
 
     for (var i = 0; i < numRounds; i++){
         // Constant Addition A
@@ -262,6 +328,17 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
         sBox[i].delta <== 0;
         roundX[(4*i) + 4] <== sBox[i].outX;
         roundY[(4*i) + 4] <== sBox[i].outY;
+
+        // Verifying the output of the sBox
+        // verify[i] = sBoxVerify(nInputs, exp);
+        // verify[i].Y <== roundY[(4*i) + 3]; // original y
+        // verify[i].V <== roundY[(4*i) + 4]; // new y
+        // verify[i].beta <== g;
+        // verify[i].gamma <== inv_g;
+        // verify[i].delta <== 0;
+
+        // verify[i].outX === roundX[(4*i) + 3];
+        // verify[i].outU === roundX[(4*i) + 4];
     }
     // One final diffusion before returning the Anemoi permutation
     diffusionLayer[numRounds] = diffusionLayer(nInputs);
@@ -273,4 +350,4 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     outY <== diffusionLayer[numRounds].outY;
 }
 
-//component main = Anemoi(1,19, 8384883667915720146, 11);
+component main = Anemoi(1,19, 8384883667915720146, 11);

@@ -171,6 +171,7 @@ if __name__ == "__main__":
     # alpha = random.choice([3,5,7,11]) # taken from the paper
     # nInputs = random.choice([1,2,3,4,6,8])
     alpha = 11
+    # Due to the current state of the circom implementation L < 5
     nInputs = 1
     generate_input_json(prime_value=prime_value, alpha=alpha, nInputs=nInputs)
     print("Generator and its inverse written to input.json.")
