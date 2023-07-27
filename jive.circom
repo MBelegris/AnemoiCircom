@@ -14,8 +14,8 @@ template jive_mode(b, numRounds, exp, inv_exp){
     signal input isPrime;
     signal input g; // g is the generator found in Fq
     signal input inv_g; // The multiplicative inverse of g in Fq
-    signal input roundConstantC;
-    signal input roundConstantD;
+    signal input roundConstantC[numRounds][b];
+    signal input roundConstantD[numRounds][b];
 
     signal output out;
 
@@ -28,13 +28,14 @@ template jive_mode(b, numRounds, exp, inv_exp){
     anemoi.isPrime <== isPrime;
     anemoi.g <== g;
     anemoi.inv_g <== inv_g;
-    anemoi.roundConstantC <== roundConstantC;
-    anemoi.roundConstantD <== roundConstantD;
+    anemoi.c <== roundConstantC;
+    anemoi.d <== roundConstantD;
 
     for (var i = 0; i < b; i++){
         acc[i] <== anemoi.outX[i] + X[i] + anemoi.outY[i] + Y[i];
     }
     out <== acc[b-1];
+    log("Final result: ", out);
 }
 // Change these values when using different inputs
-component main = jive_mode(1,19, 8384883667915720146, 11);
+component main = jive_mode(1,21, 8755297148735710088898562298102910035478524462919129465075615157858090483433, 5);

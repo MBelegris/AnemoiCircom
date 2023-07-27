@@ -7,3 +7,5 @@ jive_cpp/
 jive_js/
 jive.r1cs
 jive.sym
+.idea/
+circom/

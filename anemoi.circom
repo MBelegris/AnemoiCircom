@@ -11,6 +11,7 @@ pragma circom 2.0.0;
 // Linear Layer
 
 template constantAddition(nInputs){
+    // x and y are added by the the round constants for that specific round
     signal input c[nInputs];
     signal input d[nInputs];
 
@@ -21,6 +22,8 @@ template constantAddition(nInputs){
     signal output outY[nInputs];
     
     for (var i=0; i < nInputs; i++){
+        log("Round Constant C", c[i]);
+        log("Round Constant D", d[i]);
         outX[i] <== X[i] + c[i];
         outY[i] <== Y[i] + d[i];    
     }
@@ -113,21 +116,27 @@ template PHT(nInputs){
 }
 
 template exponentiate(exponent){
+    log("In exponentiate");
     signal input in;
     signal output out;
 
-    signal stor[exponent];
+    signal stor[exponent+1];
 
-    stor[0] <== in;
-
-    for (var i = 1; i < exponent; i++){
-        stor[i] <== stor[i-1] * in;
-        log("Exponentiate: ", stor[i]);
+    for (var i = 0; i < exponent; i++){
+        if (i == 0){
+            stor[i] <== in;
+            log("Stor ", i, stor[i]);
+        }
+        else{
+            stor[i] <== stor[i-1] * in;
+            log("Stor ", i, ":", stor[i-1], "*", in, "=", stor[i]);
+        }
     }
     out <== stor[exponent-1];
 }
 
-template openFlystel(nInputs, alpha){
+template openFlystel(alpha){
+    log("In Open Flystel");
     // Open Flystel network H maps (x,y) to (u,v)
     // 1. x <- x - Qγ(y)
     // 2. y <- y - E^-1(x)
@@ -149,17 +158,24 @@ template openFlystel(nInputs, alpha){
 
     signal t; // as taken from the paper
 
-    component const1 = exponentiate(alpha);
-    const1.in <== x;
+    component y_squared = exponentiate(2);
+    y_squared.in <== y;
 
-    component const2 = exponentiate(alpha);
-    component const3 = exponentiate(alpha);
+    t <== x - (beta*y_squared.out) - gamma;
+    log("t:",t);
+    
+    component t_power_inv_a = exponentiate(alpha);
+    t_power_inv_a.in <== t;
 
-    t <== x - (beta*const1.out + gamma);
-    const2.in <== t;
-    v <== y - const2.out;
-    const3.in <== v;
-    u <== t + (beta*const3.out + delta);
+    v <== y - t_power_inv_a.out;
+    log("v:",v);
+
+    component v_squared = exponentiate(2);
+    v_squared.in <== v;
+
+    u <== t + (beta*v_squared.out) + delta;
+    log("u:",u);
+
 }
 
 template closedFlystel(nInputs, alpha){
@@ -209,7 +225,7 @@ template sBox(nInputs, alpha){
     component flystel[nInputs];
 
     for (var i = 0; i < nInputs; i++){       
-        flystel[i] = openFlystel(nInputs, alpha);
+        flystel[i] = openFlystel(alpha);
         flystel[i].x <== X[i];
         flystel[i].y <== Y[i];
         flystel[i].beta <== beta;
@@ -260,8 +276,13 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     signal input isPrime;
     signal input g; // g is the generator found in Fq
     signal input inv_g; // The multiplicative inverse of g in Fq
-    signal input roundConstantC;
-    signal input roundConstantD;
+    signal input c[numRounds][nInputs];
+    signal input d[numRounds][nInputs];
+
+    log("Exponent:", exp);
+    log("Inverse Exponent:", inv_exp);
+    log("Generator:", g);
+    log("Inverse Generator:", inv_g);
 
     signal output outX[nInputs];
     signal output outY[nInputs];
@@ -273,17 +294,21 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     signal verifyU[numRounds][nInputs];
     
     // Stores round constants for each round
-    signal c[nInputs]; 
-    signal d[nInputs];
+    // signal c[nInputs]; 
+    // signal d[nInputs];
 
-    for (var i = 0; i < nInputs; i++){
-        c[i] <== roundConstantC;
-        d[i] <== roundConstantD;
-    }
+    // for (var i = 0; i < nInputs; i++){
+    //     c[i] <== roundConstantC;
+    //     d[i] <== roundConstantD;
+    // }
 
     roundX[0] <== X;
     roundY[0] <== Y;
-
+    for (var i = 0; i < nInputs; i++){
+        log("Initial X:", X[i]);
+        log("Initial Y:", Y[i]);
+    }
+        
     component constantAddition[numRounds];
     component diffusionLayer[numRounds + 1];
     component phtLayer[numRounds];
@@ -291,23 +316,34 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
 
     component verify[numRounds];
 
+    log("");
+    log("");
     for (var i = 0; i < numRounds; i++){
+        log("Round:", i);
         // Constant Addition A
         constantAddition[i] = constantAddition(nInputs);
-        constantAddition[i].c <== c;
-        constantAddition[i].d <== d;
+        constantAddition[i].c <== c[i];
+        constantAddition[i].d <== d[i];
         constantAddition[i].X <== roundX[4*i]; 
         constantAddition[i].Y <== roundY[4*i]; 
         roundX[(4*i)+1] <== constantAddition[i].outX;
         roundY[(4*i)+1] <== constantAddition[i].outY;
+        for (var num = 0; num < nInputs; num++){
+            log("Constant Addition Output X:", roundX[(4*i)+1][num]);
+            log("Constant Addition Output Y:", roundY[(4*i)+1][num]);
+        }
 
         // Linear Layer M
         diffusionLayer[i] = diffusionLayer(nInputs);
         diffusionLayer[i].X <== roundX[(4*i)+1];
-        diffusionLayer[i].Y <== roundX[(4*i)+1];
+        diffusionLayer[i].Y <== roundY[(4*i)+1];
         diffusionLayer[i].g <== g;
         roundX[(4*i)+2] <== diffusionLayer[i].outX;
         roundY[(4*i)+2] <== diffusionLayer[i].outY;
+        for (var num = 0; num < nInputs; num++){
+            log("Linear Layer Output X:", roundX[(4*i)+2][num]);
+            log("Linear Layer Output Y:", roundY[(4*i)+2][num]);
+        }
 
         // PHT P
         phtLayer[i] = PHT(nInputs);
@@ -315,6 +351,11 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
         phtLayer[i].Y <== roundY[(4*i) + 2];
         roundX[(4*i) + 3] <== phtLayer[i].outX;
         roundY[(4*i) + 3] <== phtLayer[i].outY;
+        for (var num = 0; num < nInputs; num++){
+            log("PHT Output X:", roundX[(4*i)+3][num]);
+            log("PHT Output Y:", roundY[(4*i)+3][num]);
+        }
+
 
         // S-box Layer H
         // Implementing Qγ(x) = gx^a + g^-1
@@ -328,6 +369,13 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
         sBox[i].delta <== 0;
         roundX[(4*i) + 4] <== sBox[i].outX;
         roundY[(4*i) + 4] <== sBox[i].outY;
+        for (var num = 0; num < nInputs; num++){
+            log("S Box Output X:", roundX[(4*i)+4][num]);
+            log("S Box Output Y:", roundY[(4*i)+4][num]);
+        }
+
+        log("");
+        log("");
 
         // Verifying the output of the sBox
         // verify[i] = sBoxVerify(nInputs, exp);
@@ -350,4 +398,4 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     outY <== diffusionLayer[numRounds].outY;
 }
 
-component main = Anemoi(1,19, 8384883667915720146, 11);
+//component main = Anemoi(1,19, 8384883667915720146, 11);
