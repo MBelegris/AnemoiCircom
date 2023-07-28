@@ -22,8 +22,8 @@ template constantAddition(nInputs){
     signal output outY[nInputs];
     
     for (var i=0; i < nInputs; i++){
-        log("Round Constant C", c[i]);
-        log("Round Constant D", d[i]);
+        log("Round Constant C:", c[i]);
+        log("Round Constant D:", d[i]);
         outX[i] <== X[i] + c[i];
         outY[i] <== Y[i] + d[i];    
     }
@@ -62,13 +62,28 @@ template diffusionLayer(nInputs){
         outY <== wordPermutation.out;
     }
     else{
+        component g_squared = exponentiate(2);
+        g_squared.in <== g;
         if (nInputs == 2){
             // Based on diagram of Mx given in the Anemoi paper: Figure 7
-            outX[0] <== g*X[1] + X[0];
-            outX[1] <== g*X[0] + X[1];
+            outX[0] <== X[0] + (X[1]*g);
+            signal inter_x[3];
+            inter_x[0] <== g_squared.out + 1;
+            inter_x[1] <== X[1] * inter_x[0];
+            inter_x[2] <== (X[0] * g) + inter_x[1];
+            outX[1] <== inter_x[2];
+
+            signal inter_y[3];
+            inter_y[0] <== g_squared.out + 1;
+            inter_y[1] <== wordPermutation.out[1] * inter_y[0];
+            inter_y[2] <== (wordPermutation.out[0]*g) + inter_y[1];
+            outY[0] <== wordPermutation.out[0] + (wordPermutation.out[1]*g);
+            outY[1] <== inter_y[2];
+            // outX[0] <== g*X[1] + X[0];
+            // outX[1] <== g*X[0] + X[1];
             
-            outY[0] <== g*wordPermutation.out[1] + wordPermutation.out[0];
-            outY[1] <== g*wordPermutation.out[0] + wordPermutation.out[1];
+            // outY[0] <== g*wordPermutation.out[1] + wordPermutation.out[0];
+            // outY[1] <== g*wordPermutation.out[0] + wordPermutation.out[1];
 
         }
         if (nInputs == 3){
@@ -116,7 +131,6 @@ template PHT(nInputs){
 }
 
 template exponentiate(exponent){
-    log("In exponentiate");
     signal input in;
     signal output out;
 
@@ -125,11 +139,11 @@ template exponentiate(exponent){
     for (var i = 0; i < exponent; i++){
         if (i == 0){
             stor[i] <== in;
-            log("Stor ", i, stor[i]);
+            // log("Stor ", i, stor[i]);
         }
         else{
             stor[i] <== stor[i-1] * in;
-            log("Stor ", i, ":", stor[i-1], "*", in, "=", stor[i]);
+            // log("Stor ", i, ":", stor[i-1], "*", in, "=", stor[i]);
         }
     }
     out <== stor[exponent-1];
@@ -162,7 +176,7 @@ template openFlystel(alpha){
     y_squared.in <== y;
 
     t <== x - (beta*y_squared.out) - gamma;
-    log("t:",t);
+    log("t:", t);
     
     component t_power_inv_a = exponentiate(alpha);
     t_power_inv_a.in <== t;
@@ -311,7 +325,7 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
         
     component constantAddition[numRounds];
     component diffusionLayer[numRounds + 1];
-    component phtLayer[numRounds];
+    component phtLayer[numRounds + 1];
     component sBox[numRounds];
 
     component verify[numRounds];
@@ -394,8 +408,12 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     diffusionLayer[numRounds].Y <== roundY[4*numRounds];
     diffusionLayer[numRounds].g <== g;
 
-    outX <== diffusionLayer[numRounds].outX;
-    outY <== diffusionLayer[numRounds].outY;
+    phtLayer[numRounds] = PHT(nInputs);
+    phtLayer[numRounds].X <== diffusionLayer[numRounds].outX;
+    phtLayer[numRounds].Y <== diffusionLayer[numRounds].outY;
+
+    outX <== phtLayer[numRounds].outX;
+    outY <== phtLayer[numRounds].outY;
 }
 
 //component main = Anemoi(1,19, 8384883667915720146, 11);

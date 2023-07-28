@@ -11,11 +11,11 @@ import json, random
 def genState(nCol, q):
     # the state is 2 column matrix made up of the vectors X and Y which hold values of length 
     print("Generating state")
-    X = []
-    Y = []
-    for _ in range(0, nCol):
-        X.append(8404495520846403286293514779941039435449375223571355295558081683375215000391)
-        Y.append(18087412928593654991807700631708105366073567097313163863699953630327962066051)
+    X = ["4425805239127543686866680956380495437534619360510339686538084232152901305936", "12638174493755109438139313127290520428403475963453564402247365211860451615127"]
+    Y = ["6249054965265308190071293847349693867382362711246105630724572675246277460660", "425747601079285276755519522414297261686084193522538277332749436491279511820"]
+    # for _ in range(0, nCol):
+    #     X.append("13408249080594663555947146671264571896904025436398784314794636287929411776867")
+    #     Y.append("2430100982415468446971000828530373404790523184484684533556545002794104283104")
         # X.append(random.randint(0, q - 1))
         # Y.append(random.randint(0, q - 1))
     out = [X, Y]
@@ -45,6 +45,9 @@ def genRoundConstants(alpha, g, inv_g, q, num_rounds, nInputs):
             pi_1_i = pi_1 ** i
             pow_alpha = pow((pi_0_r + pi_1_i), alpha, q)
             C[r].append(str(((g * (pi_0_r) ** 2) + pow_alpha) % q))
+            if i == 0:
+                print(g, "*", "(", (pi_1_i ** 2), ") +", pow_alpha, "+", inv_g)
+
             D[r].append(str(((g * (pi_1_i) ** 2) + pow_alpha + inv_g) % q))
 
     out = C, D
@@ -168,8 +171,8 @@ def generate_input_json(prime_value, alpha, nInputs):
     # if not is_prime(prime_value):
     #     raise ValueError("The input prime_value is not a prime number.")
 
-    generator = find_gen(prime_value)
-    # generator = 3
+    # generator = find_gen(prime_value)
+    generator = 5
     print("Found generator:", generator)
     if generator is None:
         raise ValueError("No generator found for the given prime_value.")
@@ -187,7 +190,7 @@ def generate_input_json(prime_value, alpha, nInputs):
         inv_exp = inv_exp % prime_value
     print("Found inverse of exponent", alpha, ":", inv_exp)
 
-    roundContstants = genRoundConstants(alpha=inv_exp, g=3, inv_g=inverse_generator, q=prime_value,
+    roundContstants = genRoundConstants(alpha=inv_exp, g=generator, inv_g=inverse_generator, q=prime_value,
                                         num_rounds=numRounds, nInputs=nInputs)
     print("Round constants generated:", roundContstants[0], roundContstants[1])
 
@@ -212,16 +215,18 @@ def generate_input_json(prime_value, alpha, nInputs):
 if __name__ == "__main__":
     print("Generating Inputs")
     # prime_value = 2**64 - 2**32 + 1
-    # Prime for BN12-381
+    # Prime for BN12-381 Basefield
     # prime_value = 0x1a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab
-    # Prime for BN-254
-    prime_value = 0x30644E72E131A029B85045B68181585D97816A916871CA8D3C208C16D87CFD47
+    # Prime for BN-254 Basefield
+    # prime_value = 0x30644E72E131A029B85045B68181585D97816A916871CA8D3C208C16D87CFD47
+    # Prime for BN-254 Scalarfield
+    prime_value = 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
     print("Prime value:", prime_value)
     # a={3,5,7,11} and nInputs={1,2,3,4,6,8}
     # alpha = random.choice([3,5,7,11]) # taken from the paper
     # nInputs = random.choice([1,2,3,4,6,8])
     alpha = 5
     # Due to the current state of the circom implementation L < 5
-    nInputs = 1
+    nInputs = 2
     generate_input_json(prime_value=prime_value, alpha=alpha, nInputs=nInputs)
-    print("Generator and its inverse written to bn254-input.json.")
+    print("Generator and its inverse written to input.json.")

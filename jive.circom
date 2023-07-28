@@ -32,10 +32,16 @@ template jive_mode(b, numRounds, exp, inv_exp){
     anemoi.d <== roundConstantD;
 
     for (var i = 0; i < b; i++){
-        acc[i] <== anemoi.outX[i] + X[i] + anemoi.outY[i] + Y[i];
+        // log(anemoi.outX[i], "+", X[i], "+", anemoi.outY[i], "+", Y[i]);
+        if (i == 0){
+            acc[i] <== anemoi.outX[i] + X[i] + anemoi.outY[i] + Y[i];
+        }
+        else{
+            acc[i] <== anemoi.outX[i] + X[i] + anemoi.outY[i] + Y[i] + acc[i-1];
+        }
     }
     out <== acc[b-1];
     log("Final result: ", out);
 }
 // Change these values when using different inputs
-component main = jive_mode(1,21, 8755297148735710088898562298102910035478524462919129465075615157858090483433, 5);
+component main = jive_mode(2, 14, 8755297148735710088898562298102910035478524462919129465075615157858090483433, 5);

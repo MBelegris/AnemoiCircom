@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /bin/sh
 
 # Step 1: Generate Inputs
 echo "Generating Inputs in input.json"
@@ -9,11 +9,11 @@ echo "Beginning circuit compilation"
 circom jive.circom --r1cs --wasm --sym
 
 # Optional: view information about circuit
-echo "Viewing Information about the circuit"
-snarkjs r1cs info jive.r1cs
-# Optional: print the constraints 
-echo "Printing constraints"
-snarkjs r1cs print jive.r1cs jive.sym
+# echo "Viewing Information about the circuit"
+# snarkjs r1cs info jive.r1cs
+# # Optional: print the constraints 
+# echo "Printing constraints"
+# snarkjs r1cs print jive.r1cs jive.sym
 
 # Export r1cs to json
 echo "Exporting r1cs to json"
