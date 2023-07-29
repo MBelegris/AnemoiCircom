@@ -44,4 +44,4 @@ template jive_mode(b, numRounds, exp, inv_exp){
     log("Final result: ", out);
 }
 // Change these values when using different inputs
-component main = jive_mode(2, 14, 8755297148735710088898562298102910035478524462919129465075615157858090483433, 5);
+component main = jive_mode(4, 12, 8755297148735710088898562298102910035478524462919129465075615157858090483433, 5);

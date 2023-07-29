@@ -11,13 +11,16 @@ import json, random
 def genState(nCol, q):
     # the state is 2 column matrix made up of the vectors X and Y which hold values of length 
     print("Generating state")
-    X = ["4425805239127543686866680956380495437534619360510339686538084232152901305936", "12638174493755109438139313127290520428403475963453564402247365211860451615127"]
-    Y = ["6249054965265308190071293847349693867382362711246105630724572675246277460660", "425747601079285276755519522414297261686084193522538277332749436491279511820"]
+    # X = []
+    # Y = []
+    X = ["13189433600672024897153787291721299602715216817495643448535955554917789495025", "17316507187164299475224144941057790675753767114035658330726592396016676543227",
+          "8731146564440388795203582814365571042736855027068034218671742387829260236678", "7293602442649992638351963429554891410127696276574797374200992099058987047917"]
+    Y = ["18465487340214366094617348024692116439897718062820665404168828788955097688631", "21407696641606757367904533687925517643631843893158324865734506713757821175092", 
+         "69692644111905421428007003434030979538660343480018911033835899660156858630", "3609696650433317867657188873617916684160137005332389827054978832423065435843"]
+
     # for _ in range(0, nCol):
-    #     X.append("13408249080594663555947146671264571896904025436398784314794636287929411776867")
-    #     Y.append("2430100982415468446971000828530373404790523184484684533556545002794104283104")
-        # X.append(random.randint(0, q - 1))
-        # Y.append(random.randint(0, q - 1))
+    #     X.append(random.randint(0, q - 1))
+    #     Y.append(random.randint(0, q - 1))
     out = [X, Y]
     return out
 
@@ -45,21 +48,18 @@ def genRoundConstants(alpha, g, inv_g, q, num_rounds, nInputs):
             pi_1_i = pi_1 ** i
             pow_alpha = pow((pi_0_r + pi_1_i), alpha, q)
             C[r].append(str(((g * (pi_0_r) ** 2) + pow_alpha) % q))
-            if i == 0:
-                print(g, "*", "(", (pi_1_i ** 2), ") +", pow_alpha, "+", inv_g)
-
             D[r].append(str(((g * (pi_1_i) ** 2) + pow_alpha + inv_g) % q))
 
     out = C, D
-
+    print(len(C))
     return out
 
 
 def getNumRounds(nInputs, alpha):
     print("Determining round number")
     # Given that s = 128, a={3,5,7,11} and nInputs={1,2,3,4,6,8}
-    arr = [[21, 21, 20, 19], [14, 14, 13, 13], [12, 12, 11, 11], [10, 10, 10, 10], [10, 10, 9, 9]]
-    out = 0
+    arr = [[21, 21, 20, 19], [14, 14, 13, 13], [12, 12, 12, 11], [12, 12, 11, 11], [10, 10, 10, 10], [10, 10, 9, 9]]
+
     if (nInputs < 5):
         if (alpha == 3):
             out = arr[nInputs - 1][0]
@@ -227,6 +227,6 @@ if __name__ == "__main__":
     # nInputs = random.choice([1,2,3,4,6,8])
     alpha = 5
     # Due to the current state of the circom implementation L < 5
-    nInputs = 2
+    nInputs = 4
     generate_input_json(prime_value=prime_value, alpha=alpha, nInputs=nInputs)
     print("Generator and its inverse written to input.json.")

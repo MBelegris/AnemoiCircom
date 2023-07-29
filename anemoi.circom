@@ -65,7 +65,6 @@ template diffusionLayer(nInputs){
         component g_squared = exponentiate(2);
         g_squared.in <== g;
         if (nInputs == 2){
-            // Based on diagram of Mx given in the Anemoi paper: Figure 7
             outX[0] <== X[0] + (X[1]*g);
             signal inter_x[3];
             inter_x[0] <== g_squared.out + 1;
@@ -79,34 +78,105 @@ template diffusionLayer(nInputs){
             inter_y[2] <== (wordPermutation.out[0]*g) + inter_y[1];
             outY[0] <== wordPermutation.out[0] + (wordPermutation.out[1]*g);
             outY[1] <== inter_y[2];
-            // outX[0] <== g*X[1] + X[0];
-            // outX[1] <== g*X[0] + X[1];
-            
-            // outY[0] <== g*wordPermutation.out[1] + wordPermutation.out[0];
-            // outY[1] <== g*wordPermutation.out[0] + wordPermutation.out[1];
-
         }
         if (nInputs == 3){
-            // Based on diagram of Mx given in the Anemoi paper: Figure 7
-            outX[0] <== (X[0] + g*X[2]) + ((X[2] + X[1]) + g*X[0]);
-            outX[1] <== X[1] + X[0] + g*X[2];
-            outX[2] <== X[2] + X[1] + g*X[0];
+            signal inter_x0[3];
+            inter_x0[0] <== X[0] * (g+1);
+            inter_x0[1] <== X[1] + inter_x0[0];
+            inter_x0[2] <== (X[2] * (g+1)) + inter_x0[1];
 
-            outY[0] <== (wordPermutation.out[0] + g*wordPermutation.out[2]) + ((wordPermutation.out[2] + wordPermutation.out[1]) + g*wordPermutation.out[0]);
-            outY[1] <== wordPermutation.out[1] + wordPermutation.out[0] + g*wordPermutation.out[2];
-            outY[2] <== wordPermutation.out[2] + wordPermutation.out[1] + g*wordPermutation.out[0];
+            signal inter_x1[3];
+            inter_x1[0] <== X[0];
+            inter_x1[1] <== X[1] + inter_x1[0];
+            inter_x1[2] <== (X[2] * g) + inter_x1[1];
+
+            signal inter_x2[3];
+            inter_x2[0] <== X[0] * g;
+            inter_x2[1] <== X[1] + inter_x2[0];
+            inter_x2[2] <== X[2] + inter_x2[1];
+
+            outX[0] <== inter_x0[2];
+            outX[1] <== inter_x1[2];
+            outX[2] <== inter_x2[2];
+
+            
+            signal inter_y0[3];
+            inter_y0[0] <== wordPermutation.out[0] * (g+1);
+            inter_y0[1] <== wordPermutation.out[1] + inter_y0[0];
+            inter_y0[2] <== (wordPermutation.out[2] * (g+1)) + inter_y0[1];
+
+            signal inter_y1[3];
+            inter_y1[0] <== wordPermutation.out[0];
+            inter_y1[1] <== wordPermutation.out[1] + inter_y1[0];
+            inter_y1[2] <== (wordPermutation.out[2] * g) + inter_y1[1];
+            
+            signal inter_y2[3];
+            inter_y2[0] <== wordPermutation.out[0] * g;
+            inter_y2[1] <== wordPermutation.out[1] + inter_y2[0];
+            inter_y2[2] <== wordPermutation.out[2] + inter_y2[1];
+
+            outY[0] <== inter_y0[2];
+            outY[1] <== inter_y1[2];
+            outY[2] <== inter_y2[2];
         }
         if (nInputs == 4){
-            // Based on diagram of Mx given in the Anemoi paper: Figure 7
-            outX[0] <== (X[0] + X[1]) + g*(X[1] + X[2] + X[3]);
-            outX[1] <== g*(X[1] + X[2] + X[3]) + (X[2] + X[3] + g*(X[3] + g*(X[0] + X[1])));
-            outX[2] <== X[2] + X[3] + g*(X[3] + g*(X[0] + X[1]));
-            outX[3] <== X[0] + X[1] + g*(X[1] + X[2] + X[3]) + X[3] + g*(X[0] + X[1]);
+            signal inter_x0[4];
+            inter_x0[0] <== X[0];
+            inter_x0[1] <== X[1]*(1+g);
+            inter_x0[2] <== X[2]*g;
+            inter_x0[3] <== X[3]*g;
+            
+            signal inter_x1[4];
+            inter_x1[0] <== X[0]*g_squared.out;
+            inter_x1[1] <== X[1]*(g+g_squared.out);
+            inter_x1[2] <== X[2]*(1+g);
+            inter_x1[3] <== X[3]*(1+(2*g));
 
-            outY[0] <== (wordPermutation.out[0] + wordPermutation.out[1]) + g*(wordPermutation.out[1] + wordPermutation.out[2] + wordPermutation.out[3]);
-            outY[1] <== g*(wordPermutation.out[1] + wordPermutation.out[2] + wordPermutation.out[3]) + (wordPermutation.out[2] + wordPermutation.out[3] + g*(wordPermutation.out[3] + g*(wordPermutation.out[0] + wordPermutation.out[1])));
-            outY[2] <== wordPermutation.out[2] + wordPermutation.out[3] + g*(wordPermutation.out[3] + g*(wordPermutation.out[0] + wordPermutation.out[1]));
-            outY[3] <== wordPermutation.out[0] + wordPermutation.out[1] + g*(wordPermutation.out[1] + wordPermutation.out[2] + wordPermutation.out[3]) + wordPermutation.out[3] + g*(wordPermutation.out[0] + wordPermutation.out[1]);
+            signal inter_x2[4];
+            inter_x2[0] <== X[0]*g_squared.out;
+            inter_x2[1] <== X[1]*g_squared.out;
+            inter_x2[2] <== X[2];
+            inter_x2[3] <== X[3]*(1+g);
+            
+            signal inter_x3[4];
+            inter_x3[0] <== X[0]*(1+g);
+            inter_x3[1] <== X[1]*(1+(2*g));
+            inter_x3[2] <== X[2]*g;
+            inter_x3[3] <== X[3]*(1+g);
+
+            outX[0] <== inter_x0[3] + inter_x0[2] + inter_x0[1] + inter_x0[0];
+            outX[1] <== inter_x1[3] + inter_x1[2] + inter_x1[1] + inter_x1[0];
+            outX[2] <== inter_x2[3] + inter_x2[2] + inter_x2[1] + inter_x2[0];
+            outX[3] <== inter_x3[3] + inter_x3[2] + inter_x3[1] + inter_x3[0];
+
+            signal inter_y0[4];
+            inter_y0[0] <== wordPermutation.out[0];
+            inter_y0[1] <== wordPermutation.out[1]*(1+g);
+            inter_y0[2] <== wordPermutation.out[2]*g;
+            inter_y0[3] <== wordPermutation.out[3]*g;
+            
+            signal inter_y1[4];
+            inter_y1[0] <== wordPermutation.out[0]*g_squared.out;
+            inter_y1[1] <== wordPermutation.out[1]*(g+g_squared.out);
+            inter_y1[2] <== wordPermutation.out[2]*(1+g);
+            inter_y1[3] <== wordPermutation.out[3]*(1+(2*g));
+
+            signal inter_y2[4];
+            inter_y2[0] <== wordPermutation.out[0]*g_squared.out;
+            inter_y2[1] <== wordPermutation.out[1]*g_squared.out;
+            inter_y2[2] <== wordPermutation.out[2];
+            inter_y2[3] <== wordPermutation.out[3]*(1+g);
+            
+            signal inter_y3[4];
+            inter_y3[0] <== wordPermutation.out[0]*(1+g);
+            inter_y3[1] <== wordPermutation.out[1]*(1+(2*g));
+            inter_y3[2] <== wordPermutation.out[2]*g;
+            inter_y3[3] <== wordPermutation.out[3]*(1+g);
+
+            outY[0] <== inter_y0[3] + inter_y0[2] + inter_y0[1] + inter_y0[0];
+            outY[1] <== inter_y1[3] + inter_y1[2] + inter_y1[1] + inter_y1[0];
+            outY[2] <== inter_y2[3] + inter_y2[2] + inter_y2[1] + inter_y2[0];
+            outY[3] <== inter_y3[3] + inter_y3[2] + inter_y3[1] + inter_y3[0];
         }
         if (nInputs > 4){
             // TODO: Implement circulant mds matrix

@@ -715,14 +715,14 @@ def test_jive(n_tests=_sage_const_10,
     print("\n\n")
     for t in range(_sage_const_0, n_tests):
         # generate random input
-        # x = [A.to_field(randint(_sage_const_0, A.q - _sage_const_1))
-        #      for _ in range(_sage_const_0, A.n_cols)]
-        # y = [A.to_field(randint(_sage_const_0, A.q - _sage_const_1))
-        #      for _ in range(_sage_const_0, A.n_cols)]
-        x = [A.to_field(8404495520846403286293514779941039435449375223571355295558081683375215000391)
+        x = [A.to_field(randint(_sage_const_0, A.q - _sage_const_1))
              for _ in range(_sage_const_0, A.n_cols)]
-        y = [A.to_field(18087412928593654991807700631708105366073567097313163863699953630327962066051)
+        y = [A.to_field(randint(_sage_const_0, A.q - _sage_const_1))
              for _ in range(_sage_const_0, A.n_cols)]
+        # x = [A.to_field(8404495520846403286293514779941039435449375223571355295558081683375215000391)
+        #      for _ in range(_sage_const_0, A.n_cols)]
+        # y = [A.to_field(18087412928593654991807700631708105366073567097313163863699953630327962066051)
+        #      for _ in range(_sage_const_0, A.n_cols)]
         print("x = {}\ny = {}\nAnemoiJive_{}(x,y) = {}".format(
             x,
             y,
@@ -906,7 +906,7 @@ if __name__ == "__main__":
           "\nalpha=", _sage_const_5, "\nn_rounds= 21\nn_cols=", _sage_const_1, "\nb=", _sage_const_2,
           "\nsecurity_level=", _sage_const_128)
     print("\n")
-    test_jive(_sage_const_1, q=BN_254_BASEFIELD,
+    test_jive(_sage_const_1, q=BN_254_SCAlARFIELD,
               alpha=_sage_const_5,
               n_rounds=21, n_cols=_sage_const_1, b=_sage_const_2, security_level=_sage_const_128)
 
