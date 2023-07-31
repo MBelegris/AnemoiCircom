@@ -14,9 +14,10 @@ const Fr = new F1Field(exports.p);
 const assert = chai.assert;
 const prime_value = BigInt("0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001", 16);
 
-const circuit_dir = "/circom";
+const circuit_dir = "./circom";
 
-describe("Testing Jive Mode", () => {
+describe("Testing Jive Mode", function() {
+    this.timeout(90000);
     const alpha = 5;
     const nInputs = 1;
     before(() => {
@@ -24,14 +25,15 @@ describe("Testing Jive Mode", () => {
     });
 
     const raw = fs.readFileSync(path.join(__dirname, 'input.json'));
-    let circuit_inputs = JSON.stringify(raw);
+    let circuit_inputs = JSON.parse(raw);
+    //circuit_inputs = JSON.stringify(circuit_inputs);
     console.log(circuit_inputs);
-    circuit_inputs = JSON.parse(circuit_inputs);
+    // circuit_inputs = JSON.parse(circuit_inputs);
     
-    const circuit = path.join(__dirname, circuit_dir, "jive_L2_a5.circom");
+    const circuit = "jive_L2_a5";
     console.log(circuit);
 
-    it("Checking compilation of Jive circuit generating wasm", async () =>{        
+    it("Compiles Jive circuit and generates wasm", async () =>{        
         const witness = await genWitness(circuit, circuit_inputs);
-    })
+    });
 })

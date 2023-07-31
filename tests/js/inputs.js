@@ -120,7 +120,7 @@ function generate_input_json(prime_value, alpha, nInputs){
         g: generator.toString(),
         inv_g: inverse_generator.toString(),
         q: prime_value.toString(),
-        isPrime: "True",
+        isPrime: "1",
         X: state[0],
         Y: state[1],
         roundConstantC: roundConstants[0],

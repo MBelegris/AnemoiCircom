@@ -2,6 +2,6 @@
     "circom": "../circom/target/release/circom",
     "snarkjs": "./../node_modules/snarkjs/build/cli.cjs",
     "circuitDirs": [
-        "./circom"
+        "./js/circom"
     ]
 }
