@@ -1,7 +1,7 @@
 const fs = require('fs');
 const chai = require("chai");
 const path = require("path");
-const { genWitness } = require('circom-helper/build/utils');
+const { genWitness, getSignalByName } = require('circom-helper/build/utils');
 const wasm_tester = require("./index").wasm;
 const c_tester = require("./index").c;
 const genInputs = require("./inputs").generate_input_json;
@@ -34,6 +34,10 @@ describe("Testing Jive Mode", function() {
     console.log(circuit);
 
     it("Compiles Jive circuit and generates wasm", async () =>{        
+        // Generates witness
         const witness = await genWitness(circuit, circuit_inputs);
+        // Output of Jive mode
+        const output = await getSignalByName(circuit, witness, 'main.out');
+        console.log(output.toString());
     });
 })
