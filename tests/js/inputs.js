@@ -31,7 +31,7 @@ function getNumRounds(nInputs, alpha){
 }
 
 function genRoundConstants(inv_alpha, g, inv_g, prime_value, num_rounds, nInputs){
-    console.log("Calculating round constants");
+    // console.log("Calculating round constants");
 
     const pi_0 = bigInt("1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679").mod(prime_value);
     const pi_1 = bigInt("8214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196").mod(prime_value);
@@ -76,7 +76,7 @@ function genRandomBigInt(maxValue){
 }
 
 function genState(nInputs, prime){
-    console.log("Generating state");
+    // console.log("Generating state");
     let X = [];
     let Y = [];
 
@@ -95,26 +95,26 @@ function generate_input_json(prime_value, alpha, nInputs){
     }
     alpha = bigInt(alpha);
     nInputs = bigInt(nInputs);
-    console.log("Generating input json file with inputs:", prime_value.toString(), 
-    alpha.toString(), nInputs.toString());
+    // console.log("Generating input json file with inputs:", prime_value.toString(), 
+    // alpha.toString(), nInputs.toString());
 
     const generator = bigInt(5);
-    console.log("Found generator:", generator.toString());
+    // console.log("Found generator:", generator.toString());
 
     const inverse_generator = generator.modInv(prime_value);
-    console.log("Found inverse of generator:", inverse_generator.toString());
+    // console.log("Found inverse of generator:", inverse_generator.toString());
 
     const numRounds = getNumRounds(nInputs, alpha);
-    console.log("Number of rounds:", numRounds);
+    // console.log("Number of rounds:", numRounds);
 
     const inv_alpha = alpha.modInv(prime_value);
 
     const roundConstants = genRoundConstants(inv_alpha, generator, inverse_generator, prime_value,
         numRounds, nInputs);
-    console.log("Round Constants Generated:", roundConstants[0], roundConstants[1]);
+    // console.log("Round Constants Generated:", roundConstants[0], roundConstants[1]);
 
     const state = genState(nInputs, prime_value);
-    console.log("State Generated: ", state[0], state[1]);
+    // console.log("State Generated: ", state[0], state[1]);
 
     let input_data = {
         g: generator.toString(),
@@ -127,7 +127,7 @@ function generate_input_json(prime_value, alpha, nInputs){
         roundConstantD: roundConstants[1]
     };
 
-    console.log(JSON.stringify(input_data));
+    // console.log(JSON.stringify(input_data));
 
     fs.writeFile(path.join(__dirname, 'input.json'), JSON.stringify(input_data), (error) => {
         if (error) {
@@ -135,7 +135,57 @@ function generate_input_json(prime_value, alpha, nInputs){
             throw error;
         }
     });
-    console.log("Successfully written to file");
+    // console.log("Successfully written to file");
 }
 
-module.exports = {generate_input_json};
+function generate_specific_inputs_json(prime_value, alpha, nInputs, X, Y){
+    prime_value = bigInt(prime_value);
+    if (!prime_value.isPrime()){
+        throw "Prime value entered not a prime";
+    }
+    alpha = bigInt(alpha);
+    nInputs = bigInt(nInputs);
+    // console.log("Generating input json file with inputs:", prime_value.toString(), 
+    // alpha.toString(), nInputs.toString());
+
+    const generator = bigInt(5);
+    // console.log("Found generator:", generator.toString());
+
+    const inverse_generator = generator.modInv(prime_value);
+    // console.log("Found inverse of generator:", inverse_generator.toString());
+
+    const numRounds = getNumRounds(nInputs, alpha);
+    // console.log("Number of rounds:", numRounds);
+
+    const inv_alpha = alpha.modInv(prime_value);
+
+    const roundConstants = genRoundConstants(inv_alpha, generator, inverse_generator, prime_value,
+        numRounds, nInputs);
+    // console.log("Round Constants Generated:", roundConstants[0], roundConstants[1]);
+
+    let input_data = {
+        g: generator.toString(),
+        inv_g: inverse_generator.toString(),
+        q: prime_value.toString(),
+        isPrime: "1",
+        X: X,
+        Y: Y,
+        roundConstantC: roundConstants[0],
+        roundConstantD: roundConstants[1]
+    };
+
+    // console.log(JSON.stringify(input_data));
+
+    fs.writeFile(path.join(__dirname, 'input2.json'), JSON.stringify(input_data), (error) => {
+        if (error) {
+            console.log(error);
+            throw error;
+        }
+    });
+    // console.log("Successfully written to file");
+}
+
+module.exports = {
+    generate_input_json,
+    generate_specific_inputs_json 
+};

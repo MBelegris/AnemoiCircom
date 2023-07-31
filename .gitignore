@@ -11,3 +11,4 @@ jive.sym
 circom/
 node_modules/
 compiled/
+input2.json
