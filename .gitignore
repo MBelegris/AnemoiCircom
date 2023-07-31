@@ -10,3 +10,4 @@ jive.sym
 .idea/
 circom/
 node_modules/
+compiled/

@@ -6,21 +6,16 @@
 """
 import json, random
 
-# cfrom sympy import primitive_root
+# from sympy import primitive_root
 
 def genState(nCol, q):
     # the state is 2 column matrix made up of the vectors X and Y which hold values of length 
     print("Generating state")
-    # X = []
-    # Y = []
-    X = ["13189433600672024897153787291721299602715216817495643448535955554917789495025", "17316507187164299475224144941057790675753767114035658330726592396016676543227",
-          "8731146564440388795203582814365571042736855027068034218671742387829260236678", "7293602442649992638351963429554891410127696276574797374200992099058987047917"]
-    Y = ["18465487340214366094617348024692116439897718062820665404168828788955097688631", "21407696641606757367904533687925517643631843893158324865734506713757821175092", 
-         "69692644111905421428007003434030979538660343480018911033835899660156858630", "3609696650433317867657188873617916684160137005332389827054978832423065435843"]
-
-    # for _ in range(0, nCol):
-    #     X.append(random.randint(0, q - 1))
-    #     Y.append(random.randint(0, q - 1))
+    X = []
+    Y = []
+    for _ in range(0, nCol):
+        X.append(random.randint(0, q - 1))
+        Y.append(random.randint(0, q - 1))
     out = [X, Y]
     return out
 
@@ -168,11 +163,10 @@ def in_field(value, field):
 def generate_input_json(prime_value, alpha, nInputs):
     print("Enter generate input json")
 
-    # if not is_prime(prime_value):
-    #     raise ValueError("The input prime_value is not a prime number.")
+    if not is_prime(prime_value):
+        raise ValueError("The input prime_value is not a prime number.")
 
-    # generator = find_gen(prime_value)
-    generator = 5
+    generator = find_gen(prime_value)
     print("Found generator:", generator)
     if generator is None:
         raise ValueError("No generator found for the given prime_value.")
@@ -227,6 +221,6 @@ if __name__ == "__main__":
     # nInputs = random.choice([1,2,3,4,6,8])
     alpha = 5
     # Due to the current state of the circom implementation L < 5
-    nInputs = 4
+    nInputs = 1
     generate_input_json(prime_value=prime_value, alpha=alpha, nInputs=nInputs)
     print("Generator and its inverse written to input.json.")
