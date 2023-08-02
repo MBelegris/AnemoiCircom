@@ -144,4 +144,46 @@ describe("Circom testing", function(){
             assert.equal(output.toString(),correctOutput);
         });
     });
+
+    describe("Testing jive mode with b=8", function(){
+        // this.timeout(90000);
+        const alpha = 5;
+        const nInputs = 4;
+
+        it("Compiles Jive circuit and generates wasm", async () =>{
+            genInputs(prime_value, alpha, nInputs, 'input7.json');
+
+            // Read inputs
+            const raw = fs.readFileSync(path.join(__dirname, 'input7.json'));
+            let circuit_inputs = JSON.parse(raw);
+            const circuit = "jive_L8_a5";
+            // Generates witness
+            const witness = await genWitness(circuit, circuit_inputs);
+            // Output of Jive mode
+            const output = await getSignalByName(circuit, witness, 'main.out');
+        });
+
+        it("Compresses 8 inputs into 1", async () =>{
+            let X = ["11791873043189730376767856592623449459729276490609688014948741864777093871304","6568335653924751622156771054922021302042960267782577420764231899317090923374","13842316347010138632574849440746054698892270227217740346030367177693594368866", "15028505170174691212174431575637629877559039281898140067555927331316616697038"];
+            let Y = ["8230575181648048398158185173893833351437703830882082524748340837839626416692","15717764266924541210444261093213193122857216055376029102038335752355069011646","17596346400168342421789442602844540148976393340997617702493557773907672771155", "3023258445115205347209713590591301213470465997679181996020717873273341609883"];
+            
+            genSpecInputs(prime_value, alpha, nInputs, X, Y,'input8.json');
+            
+            const correctOutput = "513102371531696489370490618714104897763008661434507389297101409373159319612";
+
+            // Read inputs
+            const raw = fs.readFileSync(path.join(__dirname, 'input8.json'));
+            let circuit_inputs = JSON.parse(raw);
+            const circuit = "jive_L8_a5";
+
+            // Generates witness
+            const witness = await genWitness(circuit, circuit_inputs);
+            // Output of Jive mode
+            const output = await getSignalByName(circuit, witness, 'main.out'); 
+
+            chai.expect(output < prime_value);
+
+            assert.equal(output.toString(),correctOutput);
+        });
+    });
 });
