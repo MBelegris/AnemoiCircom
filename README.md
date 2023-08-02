@@ -30,7 +30,28 @@ For more information about Anemoi look at the paper or in the summary of it in [
 
 **Step 2:** Install pre-requisites using
 
- `npm i`
+Download the node modules necessary for this project:
+
+`npm i`
+
+Download circom:
+
+```
+git clone https://github.com/iden3/circom.git
+
+cd circom
+
+cargo build --release
+
+cargo install --path circom
+
+export PATH="$HOME/.cargo/bin:$PATH"
+```
+
+Donwload snarkjs:
+
+`npm install -g snarkjs`
+
 
 **Step 3:** Run the code
 

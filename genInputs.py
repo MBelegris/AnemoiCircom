@@ -6,7 +6,7 @@
 """
 import json, random
 
-# from sympy import primitive_root
+from sympy import primitive_root
 
 def genState(nCol, q):
     # the state is 2 column matrix made up of the vectors X and Y which hold values of length 
@@ -25,12 +25,6 @@ def genRoundConstants(alpha, g, inv_g, q, num_rounds, nInputs):
     print("Calculating round constants")
     pi_0 = 1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679 % q
     pi_1 = 8214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196 % q
-
-    # out = []
-    # eq1 = g * (pow(pi_0, 2, q)) + pow((pi_0 + pi_1), alpha, q)
-    # eq2 = g * (pow(pi_1, 2, q)) + pow((pi_0 + pi_1), alpha, q) + inv_g
-    # out.append(eq1)
-    # out.append(eq2)
 
     C = []
     D = []
@@ -163,11 +157,10 @@ def in_field(value, field):
 def generate_input_json(prime_value, alpha, nInputs):
     print("Enter generate input json")
 
-    # if not is_prime(prime_value):
-    #     raise ValueError("The input prime_value is not a prime number.")
+    if not is_prime(prime_value):
+        raise ValueError("The input prime_value is not a prime number.")
 
-    # generator = find_gen(prime_value)
-    generator = 5
+    generator = find_gen(prime_value)
     print("Found generator:", generator)
     if generator is None:
         raise ValueError("No generator found for the given prime_value.")
