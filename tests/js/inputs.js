@@ -45,7 +45,7 @@ function genRoundConstants(inv_alpha, g, inv_g, prime_value, num_rounds, nInputs
         D.push([]);
 
         for (var i = 0; i < nInputs; i++){
-            let pi_1_i = pi_1.pow(r).mod(prime_value);
+            let pi_1_i = pi_1.pow(i).mod(prime_value);
             let pow_alpha = pi_0_r.add(pi_1_i).modPow(inv_alpha, prime_value);
             C[r].push((pi_0_r.modPow(2, prime_value).times(g).add(pow_alpha).mod(prime_value)).toString());
             D[r].push((pi_1_i.modPow(2, prime_value).times(g).add(pow_alpha).add(inv_g).mod(prime_value)).toString());
@@ -88,7 +88,7 @@ function genState(nInputs, prime){
     return out;
 }
 
-function generate_input_json(prime_value, alpha, nInputs){
+function generate_input_json(prime_value, alpha, nInputs, fileName){
     prime_value = bigInt(prime_value);
     if (!prime_value.isPrime()){
         throw "Prime value entered not a prime";
@@ -129,7 +129,7 @@ function generate_input_json(prime_value, alpha, nInputs){
 
     // console.log(JSON.stringify(input_data));
 
-    fs.writeFile(path.join(__dirname, 'input.json'), JSON.stringify(input_data), (error) => {
+    fs.writeFile(path.join(__dirname, fileName), JSON.stringify(input_data), (error) => {
         if (error) {
             console.log(error);
             throw error;
@@ -138,7 +138,7 @@ function generate_input_json(prime_value, alpha, nInputs){
     // console.log("Successfully written to file");
 }
 
-function generate_specific_inputs_json(prime_value, alpha, nInputs, X, Y){
+function generate_specific_inputs_json(prime_value, alpha, nInputs, X, Y, fileName){
     prime_value = bigInt(prime_value);
     if (!prime_value.isPrime()){
         throw "Prime value entered not a prime";
@@ -176,7 +176,7 @@ function generate_specific_inputs_json(prime_value, alpha, nInputs, X, Y){
 
     // console.log(JSON.stringify(input_data));
 
-    fs.writeFile(path.join(__dirname, 'input2.json'), JSON.stringify(input_data), (error) => {
+    fs.writeFile(path.join(__dirname, fileName), JSON.stringify(input_data), (error) => {
         if (error) {
             console.log(error);
             throw error;
