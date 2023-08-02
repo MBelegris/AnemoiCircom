@@ -11,7 +11,6 @@
   "scripts": {
     "test": "mocha ./tests/**/*.test.js",
     "circom-helper": "circom-helper -nc -b compiled -c ./tests/circomHelperConfig.json -p 9001",
-    "test-ts": "mocha ./tests/ts/**/*.test.ts"
   },
   "name": "anemoicircom",
   "description": "A Circom Implementation of the Anemoi hash function. \r Paper can be found [here](https://eprint.iacr.org/2022/840).",
