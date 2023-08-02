@@ -102,4 +102,46 @@ describe("Circom testing", function(){
             assert.equal(output.toString(),correctOutput);        
         });
     });
+
+    describe("Testing jive mode with b=6", function(){
+        // this.timeout(90000);
+        const alpha = 5;
+        const nInputs = 3;
+
+        it("Compiles Jive circuit and generates wasm", async () =>{
+            genInputs(prime_value, alpha, nInputs, 'input5.json');
+
+            // Read inputs
+            const raw = fs.readFileSync(path.join(__dirname, 'input5.json'));
+            let circuit_inputs = JSON.parse(raw);
+            const circuit = "jive_L6_a5";
+            // Generates witness
+            const witness = await genWitness(circuit, circuit_inputs);
+            // Output of Jive mode
+            const output = await getSignalByName(circuit, witness, 'main.out');
+        });
+
+        it("Compresses 6 inputs into 1", async () =>{
+            let X = ["9331813979263278637820688835064071024726684349449605362541077612726604877263","17054071849927222935046772206378847759024497588411706375681754050161069007142","15240021571817749178866021087203608315928749791957328125080714107084456320860"];
+            let Y = ["20959840420686837714202968027958882667761028882645627885504725342374203437627","17439201755872236084431259414503251014924134264534647965508038585751422292522","7075495444444388091850850289801102050086788307565544673793595241055499137009"];
+            
+            genSpecInputs(prime_value, alpha, nInputs, X, Y,'input6.json');
+            
+            const correctOutput = "6697959810768371918583218916013412832092137181845243973000569746616804626880";
+
+            // Read inputs
+            const raw = fs.readFileSync(path.join(__dirname, 'input6.json'));
+            let circuit_inputs = JSON.parse(raw);
+            const circuit = "jive_L6_a5";
+
+            // Generates witness
+            const witness = await genWitness(circuit, circuit_inputs);
+            // Output of Jive mode
+            const output = await getSignalByName(circuit, witness, 'main.out'); 
+
+            chai.expect(output < prime_value);
+
+            assert.equal(output.toString(),correctOutput);
+        });
+    });
 });

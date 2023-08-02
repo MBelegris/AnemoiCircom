@@ -125,8 +125,8 @@ function linearLayer(prime_field, nInputs, stateX, stateY, mat) {
             var sumX = BigInt(0);
             var sumY = BigInt(0);
             for (row = 0; row <nInputs; row++){
-                sumX = Scalar.mod(Scalar.add(Scalar.mul(stateX[col], mat[col][row]), sumX), prime_field);
-                sumY = Scalar.mod(Scalar.add(Scalar.mul(stateX[col], mat[col][row]), sumY), prime_field);
+                sumX = Scalar.mod(Scalar.add(Scalar.mul(stateX[row], mat[col][row]), sumX), prime_field);
+                sumY = Scalar.mod(Scalar.add(Scalar.mul(stateY[row], mat[col][row]), sumY), prime_field);
             }
             outX.push(sumX);
             outY.push(sumY);
