@@ -111,9 +111,10 @@ function linearLayer(prime_field, nInputs, stateX, stateY, mat) {
         for (col = 0; col < nInputs; col++){
             var sumX = BigInt(0);
             var sumY = BigInt(0);
-            for (row = 0; row <nInputs; row++){
-                sumX = Scalar.mod(Scalar.add(Scalar.mul(stateX[col], mat[row][col]), sumX), prime_field);
-                sumY = Scalar.mod(Scalar.add(Scalar.mul(stateY[col], mat[row][col]), sumY), prime_field);
+            for (row = 0; row < nInputs; row++){
+                // sumX = sumX + (stateX[row] * ) % prime_field
+                sumX = Scalar.mod(Scalar.add(Scalar.mul(stateX[row], mat[row][col]), sumX), prime_field);
+                sumY = Scalar.mod(Scalar.add(Scalar.mul(stateY[row], mat[row][col]), sumY), prime_field);
             }
             outX.push(sumX);
             outY.push(sumY);
@@ -146,7 +147,7 @@ function phtLayer(nInputs, prime_field, stateX, stateY) {
 function sBoxLayer(nInputs, prime_field, stateX, stateY, alpha, beta, gamma, delta) {
     for (i = 0; i < nInputs; i++){
         stateX[i] = Scalar.mod(Scalar.sub(stateX[i], Scalar.add(Scalar.mul(beta, Scalar.pow(stateY[i], BigInt(2))), gamma)), prime_field);
-        stateY[i] = Scalar.mod(Scalar.sub(stateY[i], Scalar.pow(stateX, alpha)), prime_field);
+        stateY[i] = Scalar.mod(Scalar.sub(stateY[i], Scalar.pow(stateX[i], alpha)), prime_field);
         stateX[i] = Scalar.mod(Scalar.add(stateX[i], Scalar.add(Scalar.mul(beta, Scalar.pow(stateY[i], BigInt(2))), delta)), prime_field);
     }
     return [stateX, stateY]

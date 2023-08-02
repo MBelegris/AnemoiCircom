@@ -12,3 +12,5 @@ circom/
 node_modules/
 compiled/
 input2.json
+input3.json
+input4.json
