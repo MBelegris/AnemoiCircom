@@ -287,20 +287,13 @@ template closedFlystel(nInputs, alpha){
     signal output x;
     signal output u;
 
-    signal sub;
-    sub <== y - v;
+    signal y_squared <== y*y;
+    signal v_squared <== v*v;
+    signal sub <== y-v;
 
-    component const1 = exponentiate(alpha);
-    const1.in <== y;
-
-    component const2 = exponentiate(alpha);
-    const2.in <== sub;
-
-    component const3 = exponentiate(alpha);
-    const3.in <== v;
-
-    x <== (beta*const1.out) + gamma + const2.out;
-    u <== (beta*const3.out) + delta + const2.out;
+    var t = fast_exp(sub, alpha);
+    x <== beta*y_squared + gamma + t;
+    u <== beta*v_squared + t;
 }
 
 template sBox(nInputs, alpha){

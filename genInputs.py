@@ -179,7 +179,7 @@ def generate_input_json(prime_value, alpha, nInputs):
         inv_exp = inv_exp % prime_value
     print("Found inverse of exponent", alpha, ":", inv_exp)
 
-    roundContstants = genRoundConstants(alpha=alpha, g=generator, inv_g=inverse_generator, q=prime_value,
+    roundContstants = genRoundConstants(alpha=alpha, g=generator, inv_g=inverse_generator, q=prime_value, # Built for proper Anemoi run
                                         num_rounds=numRounds, nInputs=nInputs)
     print("Round constants generated:", roundContstants[0], roundContstants[1])
 

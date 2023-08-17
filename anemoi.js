@@ -198,7 +198,7 @@ const anemoiPerm = (prime_field, nInputs, numRounds, generator, inverse_generato
             // console.log("PHT Output X:", stateX);
             // console.log("PHT Output Y:", stateY);
             
-            var sBoxLayerRound = sBoxLayer(nInputs, prime_field, stateX, stateY, alpha, beta, gamma, delta);
+            var sBoxLayerRound = sBoxLayer(nInputs, prime_field, stateX, stateY, alpha, beta, gamma, delta); 
             stateX = sBoxLayerRound[0];
             stateY = sBoxLayerRound[1];
             // console.log("S Box Output X:", stateX);
