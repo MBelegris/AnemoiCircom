@@ -19,7 +19,8 @@ template jive_mode(b, numRounds, exp, inv_exp){
 
     signal output out;
 
-    signal acc[b];
+    signal accX[b];
+    signal accY[b];
 
     component anemoi = Anemoi(b, numRounds, exp, inv_exp);
     anemoi.X <== X;
@@ -34,12 +35,16 @@ template jive_mode(b, numRounds, exp, inv_exp){
     for (var i = 0; i < b; i++){
         // log(anemoi.outX[i], "+", X[i], "+", anemoi.outY[i], "+", Y[i]);
         if (i == 0){
-            acc[i] <== anemoi.outX[i] + X[i] + anemoi.outY[i] + Y[i];
+            accX[i] <== anemoi.outX[i] + X[i];
+            accY[i] <== anemoi.outY[i] + Y[i];
         }
         else{
-            acc[i] <== anemoi.outX[i] + X[i] + anemoi.outY[i] + Y[i] + acc[i-1];
+            accX[i] <== anemoi.outX[i] + X[i] + accX[i-1];
+            accY[i] <==  anemoi.outY[i] + Y[i] + accY[i-1];
         }
     }
-    out <== acc[b-1];
+    out <== accX[b-1] + accY[b-1];
     log("Final result: ", out);
 }
+
+component main = jive_mode(1, 21, 5, 8755297148735710088898562298102910035419345760166413737479281674630323398247);

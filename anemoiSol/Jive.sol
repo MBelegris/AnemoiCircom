@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-contract JiveMode {
+library Jive2 {
     uint256 constant prime_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
-    uint256 constant alpha = 5;
-    uint256 constant generator = 5;
     uint256 constant inverse_alpha = 8755297148735710088898562298102910035419345760166413737479281674630323398247;
-    uint256 constant inverse_generator = 8755297148735710088898562298102910035419345760166413737479281674630323398247;
-    uint256 constant beta = generator;
-    uint256 constant gamma = inverse_generator;
-    uint256[][] matrix;
 
     function expmod(
         uint256 base,
@@ -34,183 +28,316 @@ contract JiveMode {
         }
     }
 
-    function getRoundConstants(uint256 nInputs, uint numRounds) private view returns (uint256[][] memory, uint256[][] memory) {
-        uint256 pi_0 = 824104930199602784823943670164769700555607983825738307422343133481298736376;
-        uint256 pi_1 = 2603526927268970796994549077750998294070306485422942434391779651897459981936;
-        
-        uint256[][] memory roundConstantC = new uint256[][](numRounds);
-        uint256[][] memory roundConstantD = new uint256[][](numRounds);
-
-        for (uint r = 0; r < numRounds; r++) {
-            uint256 pi_0_r = expmod(pi_0, r, prime_field);
-            roundConstantC[r] = new uint256[](nInputs);
-            roundConstantD[r] = new uint256[](nInputs);
-
-            for (uint i = 0; i < nInputs; i++) {
-                uint256 pi_1_i = expmod(pi_1, i, prime_field);
-                uint256 pow_alpha = expmod((pi_0_r+pi_1_i), inverse_alpha, prime_field);
-
-                roundConstantC[r][i] = addmod(pow_alpha, mulmod(generator, expmod(pi_0_r, 2, prime_field), prime_field), prime_field);
-                roundConstantD[r][i] = addmod(pow_alpha + inverse_generator, mulmod(generator, expmod(pi_1_i, 2, prime_field), prime_field), prime_field);
-            }
-        }
-        return (roundConstantC, roundConstantD);
+    function getRoundConstantC(uint round) public pure returns (uint256) {
+        uint256[21] memory C = 
+        [3839885374615983619079149092436643520339116779748853678198206353802169405536,5645633115030132336090293182791628176022157547199284627387993563716522487390,7829528831488847287502969400417382540378688151485051068899362271995768951346,9130120469683432151608032611500777033417937203203139437163039863878357739214,14700041527375906206966113853942737281286095946194108177348361895611348308588,6873230085749053227962410489070399260312698579106514980742357286523142642641,3396067564904531382421019027585572022587878286659883556438109364984238122450,4688032845973574939518830788894959320297436455800825258311720004820787295065,13183749970057509660096554473537258381982539611760393833370312831098176452148,11873989050705069252335070320820542145246134089670940795019205209009116387667,19059628343736793772466814052171279356116641372960803272560308767979197385798,19746125655988982167697851680599884103367810484125755716201069860521818292480,17143118890402980333691011937919751491098042128403672020056062591383348088564,1905819354839648843997855424011366954398065853757606814170802995490464329291,1744820907398306454547441449584337687627478473204791283598722138213262810298,12942913101090803628745095698906028998177073997646406882432258851413929235031,10225823702926228271386599080035266200287832200353435969202916402372904237407,5790076948557935154188533619098935884466997593688584990779867666864981840976,18170754891999940846338840812319333656257714284015169896438031358706798161696,12638888546310909878661461248093946256683021771436274756970665538411979329195,14474761783164061879644500739499561947843012484070553852849458596965774991091];
+        return (C[round]);
     }
 
-    function genMatrix(uint256 nInputs) private {
-        assert(nInputs < 5);
-        assert(nInputs > 0);
+    function getRoundConstantD(uint round) public pure returns (uint256){
+        uint256[21] memory D = 
+        [12595182523351693707977711390539553555758462539915267415677488028432492803783,19422103367340554298509776206913883866142097678186557164203639444285519181280,7882342238468761187206417487070692534831418421027274912907093732838147366981,5874879736891145153668818160009763543051471685127608106581142340662258090327,14489355607231858686046436580632237067502044786961595944502166041266435624030,425207817500859929523265491321069447860305967093597876173921897389053537081,20674778711353114897009107564834577674824393842275087536352407900930792952274,6127489886926142133464412563408891836583820181551125449226479262017346085496,10192467833897401609387732967902385100330891038393692381306418177667881760695,11660909507129514612633869784800486836540737087770758162714402505994335694470,12685055367173348651811672250706491215037471086452759351288132763255523706545,6072342271235493251859734524062069502923457252538946598437058464772061492559,4832463446937391115030629036194446829394019272771151936204170320425312495190,11328837484059075904334002654394950357152267847309078243907714960928683535801,7737730627680628840651138712190892877750507377107170926085135092588952449027,21342521524493379580320071137121474896867113596402877626494149376106045429308,8168138894248727566991496917724974212737358058331892815466223734074571678498,11197137068048270536655750115127371138251436607522143856411084134619995995891,21271239086129582544188220301646198719602848946848385507171297017995749910485,10749318495120233477904005732500863444284436075039285853750921558524925765462,5887219935762415029303257886402295227786119796558276776586545914690370634630];
+        return D[round];
+    }
 
-        if (nInputs == 1) {
-            matrix = [[0, 1], [1, 0]];
-        } else {
-            if (nInputs == 2) {
-                matrix = [[1, generator], [generator, (generator**2) + 1]];
-            } else if (nInputs == 3) {
-                matrix = [
-                    [generator + 1, 1, generator + 1],
-                    [1, 1, generator],
-                    [generator, 1, 1]
-                ];
-            } else if (nInputs == 4) {
-                matrix = [
-                    [1, generator**2, generator**2, generator + 1],
-                    [
-                        1 + generator,
-                        generator + (generator**2),
-                        generator**2,
-                        1 + (2 * generator)
-                    ],
-                    [generator, 1 + generator, 1, generator],
-                    [
-                        generator,
-                        1 + (2 * generator),
-                        1 + generator,
-                        1 + generator
-                    ]
-                ];
+    function addConstant(uint256 x, uint256 y, uint256 C, uint256 D) private pure returns (uint256, uint256) {
+        x = addmod(x, C, prime_field);
+        y = addmod(y, D, prime_field);
+        return (x,y);
+    }
+
+    function phtLayer(uint256 x, uint256 y) private pure returns (uint256, uint256) {
+        y = addmod(x, y, prime_field);
+        x = addmod(x, y, prime_field);
+        return (x,y);
+    }
+
+    function sBox(uint256 x, uint256 y) private view returns (uint256, uint256) {
+        x = addmod(x, prime_field - addmod(inverse_alpha, mulmod(5, mulmod(y, y, prime_field), prime_field), prime_field), prime_field);
+        y = addmod(y, prime_field - expmod(x, 5, prime_field), prime_field);
+        x = addmod(x, mulmod(5, mulmod(y, y, prime_field), prime_field), prime_field);  
+        return (x,y);
+    }
+
+    function Anemoi (uint256 x, uint256 y, uint numRounds) public view returns (uint256, uint256) {
+        for (uint round = 0; round < numRounds; round++) {
+            (x,y) = addConstant(x,y,getRoundConstantC(round), getRoundConstantD(round));
+            (x,y) = phtLayer(x,y);
+            (x,y) = sBox(x, y);
+        } 
+
+        return phtLayer(x, y);
+    }
+
+    function Jive (uint256 x, uint y) public view returns (uint256) {
+        uint256 hash;
+        uint256 hash1;
+        uint256 hash2;
+        uint256 outX;
+        uint256 outY;
+        (outX, outY) = Anemoi(x,y,21); 
+        hash1 = addmod(x, outX, prime_field);
+        hash2 = addmod(y, outY, prime_field);
+        hash = addmod(hash1, hash2, prime_field);
+        return hash;
+    }
+}
+
+library Jive4 {
+    uint256 constant prime_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    uint256 constant inverse_alpha = 8755297148735710088898562298102910035419345760166413737479281674630323398247;
+
+    function expmod(
+        uint256 base,
+        uint256 e,
+        uint256 m
+    ) internal view returns (uint256 o) {
+        assembly {
+            // define pointer
+            let p := mload(0x40)
+            // store data assembly-favouring ways
+            mstore(p, 0x20) // Length of Base
+            mstore(add(p, 0x20), 0x20) // Length of Exponent
+            mstore(add(p, 0x40), 0x20) // Length of Modulus
+            mstore(add(p, 0x60), base) // Base
+            mstore(add(p, 0x80), e) // Exponent
+            mstore(add(p, 0xa0), m) // Modulus
+            if iszero(staticcall(sub(gas(), 2000), 0x05, p, 0xc0, p, 0x20)) {
+                revert(0, 0)
             }
+            // data
+            o := mload(p)
         }
     }
 
-    function addConstants(uint256[] memory stateX, uint256[] memory stateY, uint256[][] memory roundConstantC, uint256[][] memory roundConstantD, uint round) private pure returns (uint256[] memory, uint256[] memory) {
-        uint256[] memory outX = new uint256[](stateX.length);
-        uint256[] memory outY = new uint256[](stateY.length);
+    function getRoundConstantC(uint round) private pure returns (uint256[2] memory){
+        uint256[2][14] memory C = 
+        [
+            [3839885374615983619079149092436643520339116779748853678198206353802169405536,7729474775226037719656848858670757617366337225528138604451912461698325489420],[5645633115030132336090293182791628176022157547199284627387993563716522487390,19062370410452321880869594864288975958179142579950492678478281643607136320636],[7829528831488847287502969400417382540378688151485051068899362271995768951346,12221752752416876211202712236809079405430239308294384290311201617524594696103],[9130120469683432151608032611500777033417937203203139437163039863878357739214,15946114183213131563144997675220180304245185217666653992864411701771934362999],[14700041527375906206966113853942737281286095946194108177348361895611348308588,8243709802533605902835926897204080378959535912910893299558553180320506505602],[6873230085749053227962410489070399260312698579106514980742357286523142642641,13663857602742533397827987704803810548951750066175473951250345490833162969206],[3396067564904531382421019027585572022587878286659883556438109364984238122450,9760776924449792279596418171852637085604930714758427063300963818045588509183],[4688032845973574939518830788894959320297436455800825258311720004820787295065,8017877490472870065409776801310818753425768428580204957792920550951592598609],[13183749970057509660096554473537258381982539611760393833370312831098176452148,21821016651378217287758997050825754679615815080321538385143511056915607367508],[11873989050705069252335070320820542145246134089670940795019205209009116387667,8136694236694276269224160214181412851198598163763972187338114501451658289425],[19059628343736793772466814052171279356116641372960803272560308767979197385798,19975595704362704192764220261721649284418742323148994187456501431008780397949],[19746125655988982167697851680599884103367810484125755716201069860521818292480,8010072465469280095871684180617922962015348679447682805591471244882588926167],[17143118890402980333691011937919751491098042128403672020056062591383348088564,14698212001928020244471851078294252437272496340197278705579912864903063572510],[1905819354839648843997855424011366954398065853757606814170802995490464329291,2539341956148681249268936772624510689244641572845828980663343010327615512159]
+        ];
+        return C[round];
+    }
 
-        for (uint i = 0; i < stateX.length; i++){
-            outX[i] = addmod(stateX[i], roundConstantC[round][i], prime_field);
-            outY[i] = addmod(stateY[i], roundConstantD[round][i], prime_field);
-        }
+    function getRoundConstantD(uint round) private pure returns (uint256[2] memory) {
+        uint256[2][14] memory D = 
+        [
+            [12595182523351693707977711390539553555758462539915267415677488028432492803783,20111082143715857061116704826212798489130707478862841900170851304907983647020],[19422103367340554298509776206913883866142097678186557164203639444285519181280,14576908010677577873603965812593087396095742803690020429835380506179659278262],[7882342238468761187206417487070692534831418421027274912907093732838147366981,15900876379150899363467453992901520236227994071004897692558590246946307871091],[5874879736891145153668818160009763543051471685127608106581142340662258090327,16317183670174953817767076893168297650223744192759412220522171347135169473465],[14489355607231858686046436580632237067502044786961595944502166041266435624030,11659334102143667634477543293332711001520509246846670624952014494554928580397],[425207817500859929523265491321069447860305967093597876173921897389053537081,10842145554248449351950136376493611572844381947330846404921567270278408622999],[20674778711353114897009107564834577674824393842275087536352407900930792952274,8777555418813209824499394633283498485638106363125886257756715335995669602743],[6127489886926142133464412563408891836583820181551125449226479262017346085496,13083644751179546511916652245263882106057176647498794706947336976727486148393],[10192467833897401609387732967902385100330891038393692381306418177667881760695,567801863132943267365063469372737145760826599707092147621069385488838939791],[11660909507129514612633869784800486836540737087770758162714402505994335694470,11549924912872830882084253347600488378838225655032079113272968967016212355581],[12685055367173348651811672250706491215037471086452759351288132763255523706545,17227332947553368324670372129695991979684596529809239824423982594864441478049],[6072342271235493251859734524062069502923457252538946598437058464772061492559,19850842172309175654841266438776514286464384341445197589765321204287975381216],[4832463446937391115030629036194446829394019272771151936204170320425312495190,6013866778216540278372761846008078611913497977733048179967677762524362738489],[11328837484059075904334002654394950357152267847309078243907714960928683535801,15588670305122217562166377672447224928343868059565589968639912144345169478022]
+        ];
+        return D[round];
+    }
 
+    function addConstants(uint256[2] memory X, uint256[2] memory Y, uint256[2] memory C, uint256[2] memory D) private pure returns (uint256[2] memory, uint256[2] memory) {
+        X[0] = addmod(X[0], C[0], prime_field);
+        X[1] = addmod(X[1], C[1], prime_field);
+
+        Y[0] = addmod(Y[0], D[0], prime_field);
+        Y[1] = addmod(Y[1], D[1], prime_field);
+
+        return (X,Y);
+    }
+
+    function linearLayer(uint256[2] memory X, uint256[2] memory Y) private pure returns (uint256[2] memory, uint256[2] memory) {
+        /**
+        Matrix = [[1, g],[g, g^2 + 1]]
+        **/
+        uint256[2] memory outX;
+        outX[0] = addmod(X[0], mulmod(5, X[1], prime_field), prime_field);
+        outX[1] = addmod(mulmod(5, X[0], prime_field), mulmod(26, X[1], prime_field), prime_field);
+        uint256[2] memory outY;
+        outY[0] = addmod(Y[1], mulmod(5, Y[0], prime_field), prime_field);
+        outY[1] = addmod(mulmod(5, Y[1], prime_field), mulmod(26, Y[0], prime_field), prime_field);
         return (outX, outY);
     }
 
-    function wordPermutation(uint256[] memory stateY) private pure returns (uint256[] memory) {
-        uint256[] memory out = new uint256[](stateY.length);
-        for (uint i = 1; i < stateY.length; i++) {
-            out[i - 1] = stateY[i];
-        }
-        out[stateY.length - 1] = stateY[0];
-        return out;
+    function phtLayer(uint256[2] memory X, uint256[2] memory Y) private pure returns (uint256[2] memory, uint256[2] memory) {
+        Y[0] = addmod(X[0], Y[0], prime_field);
+        Y[1] = addmod(X[1], Y[1], prime_field);
+
+        X[0] = addmod(X[0], Y[0], prime_field);
+        X[1] = addmod(X[1], Y[1], prime_field);
+        return (X,Y);
     }
 
-    function linearLayer(uint256[] memory stateX, uint256[] memory stateY) private view returns (uint256[] memory, uint256[] memory) {
-        require(matrix.length > 0, 
-        "Must first call genMatrix");
-        uint256[] memory outY = new uint256[](stateY.length);
-        outY = wordPermutation(stateY);
+    function sBox(uint256[2] memory X, uint256[2] memory Y) private view returns (uint256[2] memory, uint256[2] memory){
+        X[0] =  addmod(X[0], prime_field - addmod(inverse_alpha, mulmod(5, mulmod(Y[0], Y[0], prime_field), prime_field), prime_field), prime_field);
+        Y[0] = addmod(Y[0], prime_field - expmod(X[0], 5, prime_field), prime_field);
+        X[0] = addmod(X[0], mulmod(5, mulmod(Y[0], Y[0], prime_field), prime_field), prime_field);
 
-        if (stateX.length == 1) {
-            return (stateX, outY);
-        } else {
-            uint256[] memory outX = new uint256[](stateX.length);
-            if (stateX.length == 2 || stateX.length == 4) {
-                for (uint col = 0; col < stateX.length; col++) {
-                    uint256 sumX = 0;
-                    uint256 sumY = 0;
-                    for (uint256 row = 0; row < stateX.length; row++) {
-                        sumX = addmod(sumX, mulmod(stateX[row], matrix[row][col], prime_field), prime_field);
-                        sumY = addmod(sumY, mulmod(outY[row], matrix[row][col], prime_field), prime_field);
-                    }
-                    outX[col] = sumX;
-                    outY[col] = sumY;
-                }
-            } else {
-                for (uint col = 0; col < stateX.length; col++) 
-                {
-                    uint256 sumX = 0;
-                    uint256 sumY = 0;
+        X[1] =  addmod(X[1], prime_field - addmod(inverse_alpha, mulmod(5, mulmod(Y[1], Y[1], prime_field), prime_field), prime_field), prime_field);
+        Y[1] = addmod(Y[1], prime_field - expmod(X[1], 5, prime_field), prime_field);
+        X[1] = addmod(X[1], mulmod(5, mulmod(Y[1], Y[1], prime_field), prime_field), prime_field);
 
-                    for (uint row = 0; row < stateX.length; row++) 
-                    {
-                        sumX = addmod(sumX, mulmod(stateX[row], matrix[col][row], prime_field), prime_field);
-                        sumY = addmod(sumY, mulmod(outY[row], matrix[col][row], prime_field), prime_field);
-                    }
+        return (X,Y);
+    }
 
-                    outX[col] = sumX;
-                    outY[col] = sumY;
-                }
+    function anemoi(uint256[2] memory X, uint256[2] memory Y) public view returns (uint256[2] memory, uint256[2] memory){
+        for (uint round = 0; round < 14; round++){
+            (X,Y) = addConstants(X,Y,getRoundConstantC(round), getRoundConstantD(round));
+            (X,Y) = linearLayer(X, Y);
+            (X,Y) = phtLayer(X, Y);
+            (X,Y) = sBox(X, Y);
+        }
+        (X,Y) = linearLayer(X, Y);
+        return phtLayer(X, Y);
+    }
+
+    function Jive(uint256[2] memory X, uint256[2] memory Y) public view returns (uint256) {
+        // uint256[2] memory _Y = Y;
+        uint256 poop = X[0];
+        uint256 poop1 = Y[0];
+        uint256 poop2 = X[1];
+        uint256 poop3 = Y[1];
+        
+        uint256[2] memory outX;
+        uint256[2] memory outY;
+
+        (outX, outY) = anemoi(X,Y);
+
+        uint256 hash0X;
+        uint256 hash0Y;
+        uint256 hash0;
+        uint256 hash1X;
+        uint256 hash1Y;
+        uint256 hash1;
+        uint256 hash;
+    
+        hash0X = addmod(poop, outX[0], prime_field);
+        hash0Y = addmod(poop1, outY[0], prime_field);
+        hash0 = addmod(hash0X, hash0Y, prime_field);
+
+        hash1X = addmod(poop2, outX[1], prime_field);
+        hash1Y = addmod(poop3, outY[1], prime_field);
+        hash1 = addmod(hash1X, hash1Y, prime_field);
+
+        hash = addmod(hash0, hash1, prime_field);
+        return hash;
+    }
+}
+
+library Jive6 {
+    uint256 constant prime_field = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    uint256 constant inverse_alpha = 8755297148735710088898562298102910035419345760166413737479281674630323398247;
+
+    function expmod(
+        uint256 base,
+        uint256 e,
+        uint256 m
+    ) internal view returns (uint256 o) {
+        assembly {
+            // define pointer
+            let p := mload(0x40)
+            // store data assembly-favouring ways
+            mstore(p, 0x20) // Length of Base
+            mstore(add(p, 0x20), 0x20) // Length of Exponent
+            mstore(add(p, 0x40), 0x20) // Length of Modulus
+            mstore(add(p, 0x60), base) // Base
+            mstore(add(p, 0x80), e) // Exponent
+            mstore(add(p, 0xa0), m) // Modulus
+            if iszero(staticcall(sub(gas(), 2000), 0x05, p, 0xc0, p, 0x20)) {
+                revert(0, 0)
             }
-            return (outX, outY);
+            // data
+            o := mload(p)
         }
     }
 
-    function phtLayer(uint256[] memory stateX, uint256[] memory stateY) private pure returns (uint256[] memory, uint256[] memory) {
-        for (uint i = 0; i < stateX.length; i++) {
-            stateY[i] = addmod(stateY[i], stateX[i], prime_field);
-            stateX[i] = addmod(stateY[i], stateX[i], prime_field);
-        }
-        return (stateX, stateY);
+    function getRoundConstantC(uint round) private pure returns (uint256[3] memory) {
+        uint256[3][12] memory C = [
+            [3839885374615983619079149092436643520339116779748853678198206353802169405536,7729474775226037719656848858670757617366337225528138604451912461698325489420,4552224110268242107926943352483571034912196395710448080055576658489924892606],[5645633115030132336090293182791628176022157547199284627387993563716522487390,19062370410452321880869594864288975958179142579950492678478281643607136320636,16962028721713659216490643978046144829779446203251744198521664345024091144066],[7829528831488847287502969400417382540378688151485051068899362271995768951346,12221752752416876211202712236809079405430239308294384290311201617524594696103,11958281642484037406084050370859878185482044285608170790716475361659720605471],[9130120469683432151608032611500777033417937203203139437163039863878357739214,15946114183213131563144997675220180304245185217666653992864411701771934362999,3770467614998418885926715199460781541978428225524039112207048671232525935916],[14700041527375906206966113853942737281286095946194108177348361895611348308588,8243709802533605902835926897204080378959535912910893299558553180320506505602,16252011716603324129036412915331845143007986887375861814485310365743485303797],[6873230085749053227962410489070399260312698579106514980742357286523142642641,13663857602742533397827987704803810548951750066175473951250345490833162969206,21057242444339072476709085501506409103474586448741517232680539126369102086962],[3396067564904531382421019027585572022587878286659883556438109364984238122450,9760776924449792279596418171852637085604930714758427063300963818045588509183,12842342277193068952575140510544404223955425997800918645260569215540679079985],[4688032845973574939518830788894959320297436455800825258311720004820787295065,8017877490472870065409776801310818753425768428580204957792920550951592598609,6928990914941272095743596421981642180955347578749550636555624057013520215477],[13183749970057509660096554473537258381982539611760393833370312831098176452148,21821016651378217287758997050825754679615815080321538385143511056915607367508,2653426202218615041649750848177559454187506609058638409151513591920881648464],[11873989050705069252335070320820542145246134089670940795019205209009116387667,8136694236694276269224160214181412851198598163763972187338114501451658289425,13223547893353431677766210211328994302048387285097443551621664321365880772831],[19059628343736793772466814052171279356116641372960803272560308767979197385798,19975595704362704192764220261721649284418742323148994187456501431008780397949,16105398957438858207168387652756135858948777493390804890479067250372358824052],[19746125655988982167697851680599884103367810484125755716201069860521818292480,8010072465469280095871684180617922962015348679447682805591471244882588926167,18412449080175860187114739127349669303441613640004876701203479709891131957618]
+        ];
+        return C[round];
+    }  
+
+    function getRoundConstantD(uint round) private pure returns (uint256[3] memory) {
+        uint256[3][12] memory D = 
+        [
+            [12595182523351693707977711390539553555758462539915267415677488028432492803783,20111082143715857061116704826212798489130707478862841900170851304907983647020,14118243231466970412691739865169312033781421011157466827128002819251023273024],[19422103367340554298509776206913883866142097678186557164203639444285519181280,14576908010677577873603965812593087396095742803690020429835380506179659278262,9660978074647824172529955471493956394800900789103587401232250525148054324510],[7882342238468761187206417487070692534831418421027274912907093732838147366981,15900876379150899363467453992901520236227994071004897692558590246946307871091,12821817021926969521653732672096019143384653410430999644317351308632874003277],[5874879736891145153668818160009763543051471685127608106581142340662258090327,16317183670174953817767076893168297650223744192759412220522171347135169473465,1325948854669150103853734962552599015061841562729112791218295634147201269200],[14489355607231858686046436580632237067502044786961595944502166041266435624030,11659334102143667634477543293332711001520509246846670624952014494554928580397,16852047768922294823982969856604175892673814583423954591232258997529347601410],[425207817500859929523265491321069447860305967093597876173921897389053537081,10842145554248449351950136376493611572844381947330846404921567270278408622999,15419942148553897394136174718339910254472072692009205137705248223365787963573],[20674778711353114897009107564834577674824393842275087536352407900930792952274,8777555418813209824499394633283498485638106363125886257756715335995669602743,9043532524265395460783057517118965751093456008280693291069808051042200396363],[6127489886926142133464412563408891836583820181551125449226479262017346085496,13083644751179546511916652245263882106057176647498794706947336976727486148393,9179169928356857505555412411078405660691610159780455837063527800340853988079],[10192467833897401609387732967902385100330891038393692381306418177667881760695,567801863132943267365063469372737145760826599707092147621069385488838939791,472866038521525206807163557125517135985736890972541966680763424621361939182],[11660909507129514612633869784800486836540737087770758162714402505994335694470,11549924912872830882084253347600488378838225655032079113272968967016212355581,13821190322240895253931243889891769956792869138477865928910006104481875061805],[12685055367173348651811672250706491215037471086452759351288132763255523706545,17227332947553368324670372129695991979684596529809239824423982594864441478049,10541547953338431302379480065874178681319486062163365978800035731779460126970],[6072342271235493251859734524062069502923457252538946598437058464772061492559,19850842172309175654841266438776514286464384341445197589765321204287975381216,5549387667885389487142856185394685666447139263698672593032612800272150139868]
+        ];
+        return D[round];
     }
 
-    function sBox(uint256[] memory stateX, uint256[] memory stateY) private view returns (uint256[] memory, uint256[] memory) {
-        for (uint i = 0; i < stateX.length; i++){
-            stateX[i] =  addmod(stateX[i], prime_field - addmod(inverse_generator, mulmod(generator, mulmod(stateY[i], stateY[i], prime_field), prime_field), prime_field), prime_field);
-            stateY[i] = addmod(stateY[i], prime_field - expmod(stateX[i], alpha, prime_field), prime_field);
-            stateX[i] = addmod(stateX[i], mulmod(generator, mulmod(stateY[i], stateY[i], prime_field), prime_field), prime_field);
-        }
-        return (stateX, stateY);
+    function addConstant(uint256[3] memory X, uint256[3] memory Y, uint256[3] memory C, uint256[3] memory D) private pure returns (uint256[3] memory, uint256[3] memory){
+        X[0] = addmod(X[0], C[0], prime_field);
+        X[1] = addmod(X[1], C[1], prime_field);
+        X[2] = addmod(X[2], C[2], prime_field);
+
+        Y[0] = addmod(Y[0], D[0], prime_field);
+        Y[1] = addmod(Y[1], D[1], prime_field);
+        Y[2] = addmod(Y[2], D[2], prime_field);
+
+        return (X,Y);
     }
 
-    function anemoi(uint256[] memory stateX, uint256[] memory stateY, uint numRounds) private returns (uint256[] memory, uint256[] memory) {
-        uint256[][] memory roundConstantC;
-        uint256[][] memory roundConstantD;
+    function linearLayer(uint256[3] memory X, uint256[3] memory Y) private pure returns (uint256[3] memory outX, uint256[3] memory outY) {
+        outX[0] = addmod(X[1], addmod(mulmod(6, X[0], prime_field), mulmod(X[2], 6, prime_field), prime_field), prime_field);
+        outX[1] = addmod(X[0], addmod(X[1], mulmod(5, X[2], prime_field), prime_field), prime_field);
+        outX[2] = addmod(X[1], addmod(X[2], mulmod(5, X[0], prime_field), prime_field), prime_field);
 
-        (roundConstantC, roundConstantD) = getRoundConstants(stateX.length, numRounds);
-        genMatrix(stateX.length);
-
-        for (uint round = 0; round < numRounds; round++) {
-            (stateX, stateY) = addConstants(stateX, stateY, roundConstantC, roundConstantD, round);
-
-            (stateX, stateY) = linearLayer(stateX, stateY);
-
-            (stateX, stateY) = phtLayer(stateX, stateY);
-
-            (stateX, stateY) = sBox(stateX, stateY);
-        }
-
-        (stateX, stateY) = linearLayer(stateX, stateY);
-
-        (stateX, stateY) = phtLayer(stateX, stateY);
-        return (stateX, stateY);
+        outY[0] = addmod(Y[2], addmod(mulmod(6, Y[1], prime_field), mulmod(Y[0], 6, prime_field), prime_field), prime_field);
+        outY[1] = addmod(Y[1], addmod(Y[2], mulmod(5, Y[0], prime_field), prime_field), prime_field);
+        outY[2] = addmod(Y[2], addmod(Y[0], mulmod(5, Y[1], prime_field), prime_field), prime_field);
     }
 
-    function jive(uint256[] memory stateX, uint256[] memory stateY, uint numRounds) public returns (uint256) {
-        require(stateX.length == stateY.length,
-        "State of X and Y must be of same length");
+    function phtLayer(uint256[3] memory X, uint256[3] memory Y) private pure returns (uint256[3] memory, uint256[3] memory) {
+        Y[0] = addmod(X[0], Y[0], prime_field);
+        Y[1] = addmod(X[1], Y[1], prime_field);
+        Y[2] = addmod(X[2], Y[2], prime_field);
 
-        uint256[] memory outX;
-        uint256[] memory outY;
+        X[0] = addmod(X[0], Y[0], prime_field);
+        X[1] = addmod(X[1], Y[1], prime_field);
+        X[2] = addmod(X[2], Y[2], prime_field);
 
-        (outX, outY) = anemoi(stateX, stateY, numRounds);
-        uint256 hash = 0;
-        for (uint i = 0; i < stateX.length; i++) {
-            uint256 x = addmod(stateX[i], outX[i], prime_field);
-            uint256 y = addmod(stateY[i], outY[i], prime_field);
+        return (X,Y);
+    }
 
-            hash = addmod(hash, addmod(x, y, prime_field), prime_field);
+    function sBox(uint256[3] memory X, uint256[3] memory Y) private view returns (uint256[3] memory, uint256[3] memory) {
+        X[0] =  addmod(X[0], prime_field - addmod(inverse_alpha, mulmod(5, mulmod(Y[0], Y[0], prime_field), prime_field), prime_field), prime_field);
+        Y[0] = addmod(Y[0], prime_field - expmod(X[0], 5, prime_field), prime_field);
+        X[0] = addmod(X[0], mulmod(5, mulmod(Y[0], Y[0], prime_field), prime_field), prime_field);
+
+        X[1] =  addmod(X[1], prime_field - addmod(inverse_alpha, mulmod(5, mulmod(Y[1], Y[1], prime_field), prime_field), prime_field), prime_field);
+        Y[1] = addmod(Y[1], prime_field - expmod(X[1], 5, prime_field), prime_field);
+        X[1] = addmod(X[1], mulmod(5, mulmod(Y[1], Y[1], prime_field), prime_field), prime_field);
+
+        X[2] =  addmod(X[2], prime_field - addmod(inverse_alpha, mulmod(5, mulmod(Y[2], Y[2], prime_field), prime_field), prime_field), prime_field);
+        Y[2] = addmod(Y[2], prime_field - expmod(X[2], 5, prime_field), prime_field);
+        X[2] = addmod(X[2], mulmod(5, mulmod(Y[2], Y[2], prime_field), prime_field), prime_field);
+        return (X,Y);
+    }
+
+    function anemoi(uint256[3] memory X, uint256[3] memory Y) public view returns (uint256[3] memory, uint256[3] memory) {
+        for (uint round = 0; round < 12; round++){
+            (X,Y) = addConstant(X, Y, getRoundConstantC(round), getRoundConstantD(round));
+            (X,Y) = linearLayer(X, Y);
+            (X,Y) = phtLayer(X, Y);
+            (X,Y) = sBox(X, Y);
         }
+        (X,Y) = linearLayer(X, Y);
+        return phtLayer(X, Y);
+    }
 
+    function Jive(uint256[3] memory X, uint256[3] memory Y) public view returns (uint256) {
+        uint256 poop = X[0];
+        uint256 poop1 = X[1];
+        uint256 poop2 = X[2];
+        uint256 poop3 = Y[0];
+        uint256 poop4 = Y[1];
+        uint256 poop5 = Y[2];
+
+        uint256[3] memory outX;
+        uint256[3] memory outY;
+
+        (outX, outY) = anemoi(X, Y);
+    
+        uint256 hash;
+        uint256 hash0;
+        uint256 hash1;
+        uint256 hash2;
+
+        hash0 = addmod(addmod(poop, outX[0], prime_field), addmod(poop3, outY[0], prime_field), prime_field);
+        hash1 = addmod(addmod(poop1, outX[1], prime_field), addmod(poop4, outY[1], prime_field), prime_field);
+        hash2 = addmod(addmod(poop2, outX[2], prime_field), addmod(poop5, outY[2], prime_field), prime_field);
+        hash = addmod(hash0, addmod(hash1, hash2, prime_field), prime_field);
         return hash;
     }
 }

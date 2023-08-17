@@ -157,10 +157,11 @@ def in_field(value, field):
 def generate_input_json(prime_value, alpha, nInputs):
     print("Enter generate input json")
 
-    if not is_prime(prime_value):
-        raise ValueError("The input prime_value is not a prime number.")
+    # if not is_prime(prime_value):
+    #     raise ValueError("The input prime_value is not a prime number.")
 
-    generator = find_gen(prime_value)
+    # generator = find_gen(prime_value)
+    generator = 5
     print("Found generator:", generator)
     if generator is None:
         raise ValueError("No generator found for the given prime_value.")
@@ -178,7 +179,7 @@ def generate_input_json(prime_value, alpha, nInputs):
         inv_exp = inv_exp % prime_value
     print("Found inverse of exponent", alpha, ":", inv_exp)
 
-    roundContstants = genRoundConstants(alpha=inv_exp, g=generator, inv_g=inverse_generator, q=prime_value,
+    roundContstants = genRoundConstants(alpha=alpha, g=generator, inv_g=inverse_generator, q=prime_value,
                                         num_rounds=numRounds, nInputs=nInputs)
     print("Round constants generated:", roundContstants[0], roundContstants[1])
 

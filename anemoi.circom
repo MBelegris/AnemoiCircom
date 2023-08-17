@@ -62,18 +62,17 @@ template diffusionLayer(nInputs){
         outY <== wordPermutation.out;
     }
     else{
-        component g_squared = exponentiate(2);
-        g_squared.in <== g;
+        signal g_squared <== g*g;
         if (nInputs == 2){
             outX[0] <== X[0] + (X[1]*g);
             signal inter_x[3];
-            inter_x[0] <== g_squared.out + 1;
+            inter_x[0] <== g_squared + 1;
             inter_x[1] <== X[1] * inter_x[0];
             inter_x[2] <== (X[0] * g) + inter_x[1];
             outX[1] <== inter_x[2];
 
             signal inter_y[3];
-            inter_y[0] <== g_squared.out + 1;
+            inter_y[0] <== g_squared + 1;
             inter_y[1] <== wordPermutation.out[1] * inter_y[0];
             inter_y[2] <== (wordPermutation.out[0]*g) + inter_y[1];
             outY[0] <== wordPermutation.out[0] + (wordPermutation.out[1]*g);
@@ -127,14 +126,14 @@ template diffusionLayer(nInputs){
             inter_x0[3] <== X[3]*g;
             
             signal inter_x1[4];
-            inter_x1[0] <== X[0]*g_squared.out;
-            inter_x1[1] <== X[1]*(g+g_squared.out);
+            inter_x1[0] <== X[0]*g_squared;
+            inter_x1[1] <== X[1]*(g+g_squared);
             inter_x1[2] <== X[2]*(1+g);
             inter_x1[3] <== X[3]*(1+(2*g));
 
             signal inter_x2[4];
-            inter_x2[0] <== X[0]*g_squared.out;
-            inter_x2[1] <== X[1]*g_squared.out;
+            inter_x2[0] <== X[0]*g_squared;
+            inter_x2[1] <== X[1]*g_squared;
             inter_x2[2] <== X[2];
             inter_x2[3] <== X[3]*(1+g);
             
@@ -156,14 +155,14 @@ template diffusionLayer(nInputs){
             inter_y0[3] <== wordPermutation.out[3]*g;
             
             signal inter_y1[4];
-            inter_y1[0] <== wordPermutation.out[0]*g_squared.out;
-            inter_y1[1] <== wordPermutation.out[1]*(g+g_squared.out);
+            inter_y1[0] <== wordPermutation.out[0]*g_squared;
+            inter_y1[1] <== wordPermutation.out[1]*(g+g_squared);
             inter_y1[2] <== wordPermutation.out[2]*(1+g);
             inter_y1[3] <== wordPermutation.out[3]*(1+(2*g));
 
             signal inter_y2[4];
-            inter_y2[0] <== wordPermutation.out[0]*g_squared.out;
-            inter_y2[1] <== wordPermutation.out[1]*g_squared.out;
+            inter_y2[0] <== wordPermutation.out[0]*g_squared;
+            inter_y2[1] <== wordPermutation.out[1]*g_squared;
             inter_y2[2] <== wordPermutation.out[2];
             inter_y2[3] <== wordPermutation.out[3]*(1+g);
             
@@ -219,6 +218,19 @@ template exponentiate(exponent){
     out <== stor[exponent-1];
 }
 
+function fast_exp(base, exponent) {
+    var result = 1;
+    while (exponent > 0){
+        if (exponent % 2 == 1){
+            result = result*base;
+            exponent = exponent - 1;
+        }
+        base = base*base;
+        exponent = exponent / 2;
+    }
+    return result;
+}
+
 template openFlystel(alpha){
     log("In Open Flystel");
     // Open Flystel network H maps (x,y) to (u,v)
@@ -242,24 +254,21 @@ template openFlystel(alpha){
 
     signal t; // as taken from the paper
 
-    component y_squared = exponentiate(2);
-    y_squared.in <== y;
+    signal y_square <== y*y;
 
-    t <== x - (beta*y_squared.out) - gamma;
+    t <== x - (beta*y_square) - gamma;
     log("t:", t);
     
-    component t_power_inv_a = exponentiate(alpha);
-    t_power_inv_a.in <== t;
+    var t_power_inv = fast_exp(t, alpha);
+    signal t_power_inv_a <-- t_power_inv;
 
-    v <== y - t_power_inv_a.out;
+    v <== y - t_power_inv_a;
     log("v:",v);
 
-    component v_squared = exponentiate(2);
-    v_squared.in <== v;
+    signal v_squared <== v*v;
 
-    u <== t + (beta*v_squared.out) + delta;
+    u <== t + (beta*v_squared) + delta;
     log("u:",u);
-
 }
 
 template closedFlystel(nInputs, alpha){
@@ -485,5 +494,3 @@ template Anemoi(nInputs, numRounds, exp, inv_exp){
     outX <== phtLayer[numRounds].outX;
     outY <== phtLayer[numRounds].outY;
 }
-
-//component main = Anemoi(1,19, 8384883667915720146, 11);
