@@ -183,10 +183,10 @@ library Jive4 {
 
     function Jive(uint256[2] memory X, uint256[2] memory Y) public view returns (uint256) {
         // uint256[2] memory _Y = Y;
-        uint256 poop = X[0];
-        uint256 poop1 = Y[0];
-        uint256 poop2 = X[1];
-        uint256 poop3 = Y[1];
+        uint256 inp = X[0];
+        uint256 inp1 = Y[0];
+        uint256 inp2 = X[1];
+        uint256 inp3 = Y[1];
         
         uint256[2] memory outX;
         uint256[2] memory outY;
@@ -201,12 +201,12 @@ library Jive4 {
         uint256 hash1;
         uint256 hash;
     
-        hash0X = addmod(poop, outX[0], prime_field);
-        hash0Y = addmod(poop1, outY[0], prime_field);
+        hash0X = addmod(inp, outX[0], prime_field);
+        hash0Y = addmod(inp1, outY[0], prime_field);
         hash0 = addmod(hash0X, hash0Y, prime_field);
 
-        hash1X = addmod(poop2, outX[1], prime_field);
-        hash1Y = addmod(poop3, outY[1], prime_field);
+        hash1X = addmod(inp2, outX[1], prime_field);
+        hash1Y = addmod(inp3, outY[1], prime_field);
         hash1 = addmod(hash1X, hash1Y, prime_field);
 
         hash = addmod(hash0, hash1, prime_field);
@@ -317,12 +317,12 @@ library Jive6 {
     }
 
     function Jive(uint256[3] memory X, uint256[3] memory Y) public view returns (uint256) {
-        uint256 poop = X[0];
-        uint256 poop1 = X[1];
-        uint256 poop2 = X[2];
-        uint256 poop3 = Y[0];
-        uint256 poop4 = Y[1];
-        uint256 poop5 = Y[2];
+        uint256 inp = X[0];
+        uint256 inp1 = X[1];
+        uint256 inp2 = X[2];
+        uint256 inp3 = Y[0];
+        uint256 inp4 = Y[1];
+        uint256 inp5 = Y[2];
 
         uint256[3] memory outX;
         uint256[3] memory outY;
@@ -334,9 +334,9 @@ library Jive6 {
         uint256 hash1;
         uint256 hash2;
 
-        hash0 = addmod(addmod(poop, outX[0], prime_field), addmod(poop3, outY[0], prime_field), prime_field);
-        hash1 = addmod(addmod(poop1, outX[1], prime_field), addmod(poop4, outY[1], prime_field), prime_field);
-        hash2 = addmod(addmod(poop2, outX[2], prime_field), addmod(poop5, outY[2], prime_field), prime_field);
+        hash0 = addmod(addmod(inp, outX[0], prime_field), addmod(inp3, outY[0], prime_field), prime_field);
+        hash1 = addmod(addmod(inp1, outX[1], prime_field), addmod(inp4, outY[1], prime_field), prime_field);
+        hash2 = addmod(addmod(inp2, outX[2], prime_field), addmod(inp5, outY[2], prime_field), prime_field);
         hash = addmod(hash0, addmod(hash1, hash2, prime_field), prime_field);
         return hash;
     }
